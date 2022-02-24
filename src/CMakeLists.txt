@@ -1,5 +1,7 @@
 set(HEADER_LIST
     engine.hpp
+    enums.hpp
+    host_properties.hpp
 )
 
 set(SOURCE_LIST
