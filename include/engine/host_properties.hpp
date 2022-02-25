@@ -8,13 +8,13 @@ namespace poly {
 
 #if defined(__linux__)
 #define HOST_OS kLinux
-#define LINUX
+#define POLY_LINUX
 #elif defined(_WIN32) || defined(_WIN64)
 #define HOST_OS kWindows
-#define WINDOWS
+#define POLY_WINDOWS
 #elif defined(__APPLE__)
 #define HOST_OS kMacOS
-#define MACOS
+#define POLY_MACOS
 #else
 #define HOST_OS kNotSupported
 #endif
