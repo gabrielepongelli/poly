@@ -23,14 +23,16 @@ namespace poly {
     constexpr HostOS kOS = HostOS::HOST_OS;
 
     namespace impl {
-        template <class T, T _Val> struct is_supported : std::false_type {};
+        template <class T, T _Val>
+        struct is_supported : std::false_type {};
 
         template <HostOS _Val>
         struct is_supported<HostOS, _Val>
             : std::conditional<_Val != HostOS::kNotSupported, std::true_type,
                                std::false_type> {};
 
-        template <HostOS O> struct is_os_supported : is_supported<HostOS, O> {
+        template <HostOS O>
+        struct is_os_supported : is_supported<HostOS, O> {
             static constexpr bool value = is_supported<HostOS, O>::type::value;
         };
 
@@ -59,7 +61,8 @@ namespace poly {
             : std::conditional<_Val != Arch::kNotSupported, std::true_type,
                                std::false_type> {};
 
-        template <Arch A> struct is_arch_supported : is_supported<Arch, A> {
+        template <Arch A>
+        struct is_arch_supported : is_supported<Arch, A> {
             static constexpr bool value = is_supported<Arch, A>::type::value;
         };
 

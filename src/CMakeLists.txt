@@ -2,18 +2,22 @@ set(HEADER_LIST
     engine.hpp
     enums.hpp
     host_properties.hpp
+    utils.hpp
+    binary_editor.hpp
+    executable_code.hpp
 )
 
 set(SOURCE_LIST
     engine.cpp
+    binary_editor.tpp
 )
 
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
-    #list(APPEND SOURCE_LIST
-    #    ...
-    #    ...
-    #)
-    #
+    list(APPEND SOURCE_LIST
+        macos/binary_editor.tpp
+        macos/get_entry_point_ra.S
+    )
+
     #list(APPEND HEADER_LIST
     #    ...
     #    ...
@@ -21,11 +25,11 @@ if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux")
-    #list(APPEND SOURCE_LIST
-    #    ...
-    #    ...
-    #)
-    #
+    list(APPEND SOURCE_LIST
+        linux/binary_editor.tpp
+        linux/get_entry_point_ra.S
+    )
+
     #list(APPEND HEADER_LIST
     #    ...
     #    ...
@@ -33,11 +37,11 @@ if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux")
 endif()
 
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Windows")
-    #list(APPEND SOURCE_LIST
-    #    ...
-    #    ...
-    #)
-    #
+    list(APPEND SOURCE_LIST
+        windows/binary_editor.tpp
+        windows/get_entry_point_ra.asm
+    )
+    
     #list(APPEND HEADER_LIST
     #    ...
     #    ...
@@ -61,8 +65,9 @@ if(MSVC)
 endif()
 
 target_include_directories(engine
-    PUBLIC 
-    ../include
+    PUBLIC
+    "${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/src"
 )
 
 target_link_libraries(engine
