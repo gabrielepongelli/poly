@@ -40,7 +40,7 @@ namespace poly {
     template <>
     impl::Section<HostOS::kLinux> *
     CommonBinaryEditor<HostOS::kLinux>::get_text_section() {
-        auto *section = bin_->text_section();
+        auto *section = &bin_->text_section();
 
         return static_cast<impl::Section<HostOS::kLinux> *>(section);
     }
@@ -74,10 +74,12 @@ namespace poly {
           entry_point_va_{get_entry_point_va()} {}
 
     template <>
-    Address CommonBinaryEditor<HostOS::kLinux>::text_section_ra() const {
+    Address CommonBinaryEditor<HostOS::kLinux>::text_section_ra() {
         auto entry_address = impl::get_entry_point_ra();
 
-        entry_address -= bin_->entrypoint() - text_section_->virtual_address();
+        entry_address -=
+            bin_->entrypoint() -
+            bin_->section_from_offset(bin_->entrypoint()).virtual_address();
 
         return entry_address;
     }
@@ -115,8 +117,7 @@ namespace poly {
             return BinaryEditorError::kSectionAlreadyExists;
         }
 
-        bin_->add_section(
-            *create_new_section(name, content.data(), content.size()));
+        bin_->add(*create_new_section(name, content.data(), content.size()));
 
         return BinaryEditorError::kNone;
     }

@@ -48,7 +48,7 @@ namespace poly {
 #elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
 #define HOST_ARCH kSupported
 #elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
-#define HOST_ARCH ksupported
+#define HOST_ARCH kSupported
 #else
 #define HOST_ARCH kNotSupported
 #endif

@@ -16,5 +16,15 @@ add_executable(hello_world
     test_binaries/hello_world.cpp
 )
 
+set(TEST_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+
+if (MSVC)
+    set(TEST_DIR "${TEST_DIR}/$<CONFIG>")
+endif()
+
 # Automatically discover tests
-catch_discover_tests(tests)
+catch_discover_tests(tests
+    WORKING_DIRECTORY "${TEST_DIR}"
+)
+
+message(STATUS "CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}")

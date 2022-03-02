@@ -7,3 +7,5 @@ get_entry_point_ra PROC
     mov rax, mainCRTStartup     ; put in rax the address of entrypoint
     ret                         ; return that value
 get_entry_point_ra ENDP
+
+END

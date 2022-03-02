@@ -30,20 +30,20 @@ namespace poly {
     Address CommonBinaryEditor<OS>::get_entry_point_va(){};
 
     template <HostOS OS>
-    Address CommonBinaryEditor<OS>::entry_point() const {
+    Address CommonBinaryEditor<OS>::entry_point() {
         return entry_point_va_;
     }
 
     template <HostOS OS>
-    Address CommonBinaryEditor<OS>::text_section_ra() const {};
+    Address CommonBinaryEditor<OS>::text_section_ra(){};
 
     template <HostOS OS>
-    Address CommonBinaryEditor<OS>::text_section_va() const {
+    Address CommonBinaryEditor<OS>::text_section_va() {
         return text_section_->virtual_address();
     }
 
     template <HostOS OS>
-    std::uint64_t CommonBinaryEditor<OS>::text_section_size() const {
+    std::uint64_t CommonBinaryEditor<OS>::text_section_size() {
         return text_section_->size();
     }
 

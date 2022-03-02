@@ -25,35 +25,33 @@ namespace poly {
         /**
          * Get the virtual address of the actual entry point of the binary.
          */
-        Address entry_point() const { return this->real()->entry_point(); }
+        Address entry_point() { return this->real()->entry_point(); }
 
         /**
          * Get the runtime address of the text section of the binary.
          * Warning: the return value of this method is correct only if the
          * binary is the same being executed by this process.
          */
-        Address text_section_ra() const {
-            return this->real()->text_section_ra();
-        }
+        Address text_section_ra() { return this->real()->text_section_ra(); }
 
         /**
          * Get the virtual address of the text section of the binary.
          */
-        Address text_section_va() const {
-            return this->real()->text_section_va();
-        }
+        Address text_section_va() { return this->real()->text_section_va(); }
 
         /**
          * Get the size in bytes of the text section of the binary.
          */
-        std::uint64_t text_section_size() const {
+        std::uint64_t text_section_size() {
             return this->real()->text_section_size();
         }
 
         /**
          * Modify the binary adding a new section that contain executable code.
          * @param name name of the new section. If a section with this name
-         * already exists it doesn't modify it.
+         * already exists it doesn't modify it. NOTE: the size of the resulting
+         * section could be bigger than the one of the content due to the page
+         * size in use.
          * @param content the code that the new section will contain.
          * @return kNone if no error is raised.
          */
@@ -92,7 +90,9 @@ namespace poly {
 
         /**
          * Update the content of the section specified. WARNING: the previous
-         * content will be completely deleted.
+         * content will be completely deleted. NOTE: the size of the resulting
+         * section could be bigger than the one of the content due to the page
+         * size in use.
          * @param name name of the section.
          * @param content the code that the new section will contain.
          * @return kNone if no error is raised.
@@ -130,13 +130,13 @@ namespace poly {
       public:
         CommonBinaryEditor(const std::string name);
 
-        Address entry_point() const;
+        Address entry_point();
 
-        Address text_section_ra() const;
+        Address text_section_ra();
 
-        Address text_section_va() const;
+        Address text_section_va();
 
-        std::uint64_t text_section_size() const;
+        std::uint64_t text_section_size();
 
         BinaryEditorError inject_section(const std::string &name,
                                          const ExecutableCode &content);

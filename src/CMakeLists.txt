@@ -39,8 +39,13 @@ endif()
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Windows")
     list(APPEND SOURCE_LIST
         windows/binary_editor.tpp
-        windows/get_entry_point_ra.asm
     )
+
+    if (MSVC)
+        list(APPEND SOURCE_LIST windows/get_entry_point_ra.asm)
+    else()
+        list(APPEND SOURCE_LIST windows/get_entry_point_ra.S)
+    endif()
     
     #list(APPEND HEADER_LIST
     #    ...

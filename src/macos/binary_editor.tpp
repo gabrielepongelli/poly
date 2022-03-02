@@ -41,8 +41,7 @@ namespace poly {
     template <>
     impl::Section<HostOS::kMacOS> *
     CommonBinaryEditor<HostOS::kMacOS>::get_text_section() {
-        auto *section =
-            bin_->section_from_offset(bin_->main_command().entrypoint());
+        auto *section = &bin_->get_section("__text");
 
         return static_cast<impl::Section<HostOS::kMacOS> *>(section);
     }
@@ -75,7 +74,7 @@ namespace poly {
           entry_point_va_{get_entry_point_va()} {}
 
     template <>
-    Address CommonBinaryEditor<HostOS::kMacOS>::text_section_ra() const {
+    Address CommonBinaryEditor<HostOS::kMacOS>::text_section_ra() {
         auto entry_address = impl::get_entry_point_ra();
 
         // calculate the pointer which point to the start of the text section

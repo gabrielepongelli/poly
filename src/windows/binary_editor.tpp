@@ -13,6 +13,17 @@
 #include "engine/host_properties.hpp"
 #include "engine/utils.hpp"
 
+// Needed to avoid some clash between enums and symbols defined in Windows.h,
+// which is used by some of the imports
+#ifdef IMAGE_SCN_MEM_EXECUTE
+#define POLY_IMAGE_SCN_MEM_EXECUTE IMAGE_SCN_MEM_EXECUTE
+#undef IMAGE_SCN_MEM_EXECUTE
+#endif
+#ifdef IMAGE_SCN_MEM_READ
+#define POLY_IMAGE_SCN_MEM_READ IMAGE_SCN_MEM_READ
+#undef IMAGE_SCN_MEM_READ
+#endif
+
 namespace poly {
 
     namespace impl {
@@ -54,14 +65,23 @@ namespace poly {
     template <>
     bool
     CommonBinaryEditor<HostOS::kWindows>::has_section(const std::string &name) {
-        return bin_->has_section(name);
+        try {
+            bin_->get_section(name);
+            return true;
+        } catch (LIEF::not_found) {
+            return false;
+        }
     }
 
     template <>
     impl::Section<HostOS::kWindows> *
     CommonBinaryEditor<HostOS::kWindows>::get_section(const std::string &name) {
-        return static_cast<impl::Section<HostOS::kWindows> *>(
-            &bin_->get_section(name));
+        try {
+            return static_cast<impl::Section<HostOS::kWindows> *>(
+                &bin_->get_section(name));
+        } catch (LIEF::not_found) {
+            return nullptr;
+        }
     }
 
     template <>
@@ -71,7 +91,7 @@ namespace poly {
           entry_point_va_{get_entry_point_va()} {}
 
     template <>
-    Address CommonBinaryEditor<HostOS::kWindows>::text_section_ra() const {
+    Address CommonBinaryEditor<HostOS::kWindows>::text_section_ra() {
         auto entry_address = impl::get_entry_point_ra();
 
         return entry_address - entry_point_va_;
@@ -113,7 +133,8 @@ namespace poly {
         }
 
         bin_->add_section(
-            *create_new_section(name, content.data(), content.size()));
+            *create_new_section(name, content.data(), content.size()),
+            LIEF::PE::PE_SECTION_TYPES::TEXT);
 
         return BinaryEditorError::kNone;
     }
@@ -129,4 +150,29 @@ namespace poly {
         return old_entry_point;
     }
 
+    template <>
+    BinaryEditorError CommonBinaryEditor<HostOS::kWindows>::update_content(
+        const std::string &name, const std::vector<std::uint8_t> &content) {
+        if (!has_section(name))
+            return BinaryEditorError::kSectionNotFound;
+
+        auto *section = get_section(name);
+
+        // must be set also this, otherwise the new content will be truncated
+        section->virtual_size(content.size());
+        section->size(content.size());
+        section->content(content);
+
+        return BinaryEditorError::kNone;
+    }
+
 } // namespace poly
+
+#ifdef POLY_IMAGE_SCN_MEM_EXECUTE
+#define IMAGE_SCN_MEM_EXECUTE POLY_IMAGE_SCN_MEM_EXECUTE
+#undef POLY_IMAGE_SCN_MEM_EXECUTE
+#endif
+#ifdef POLY_IMAGE_SCN_MEM_READ
+#define IMAGE_SCN_MEM_READ POLY_IMAGE_SCN_MEM_READ
+#undef POLY_IMAGE_SCN_MEM_READ
+#endif
