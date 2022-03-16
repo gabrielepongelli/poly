@@ -26,6 +26,17 @@ namespace poly {
         kInvalidOffset
     };
 
+    enum EditableCodeError {
+        // No error is raised
+        kNone,
+
+        // The operand specified is not valid
+        kInvalidOperand,
+
+        // The operand specified has been marked as untouchable
+        kOperandIsUntouchable
+    };
+
     namespace impl {
 
         enum class Arch { kNotSupported = 0, kSupported = 1 };

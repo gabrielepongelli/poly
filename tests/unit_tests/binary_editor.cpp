@@ -8,14 +8,14 @@
 #include <engine/binary_editor.hpp>
 #include <engine/host_properties.hpp>
 
-TEST_CASE("inject section into a binary", "[unit][binary_editor]") {
+TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
     const std::string hello_world_bin =
         poly::kOS == poly::HostOS::kWindows ? "hello_world.exe" : "hello_world";
     poly::BinaryEditor *be = new poly::SpecificBinaryEditor(hello_world_bin);
 
-    SECTION("inject a section") {
+    SECTION("Inject a section") {
 
-        SECTION("inject an existing section") {
+        SECTION("Inject an existing section") {
 #if defined(POLY_WINDOWS)
             const std::string section_name = ".data";
 #elif defined(POLY_MACOS)
@@ -30,7 +30,7 @@ TEST_CASE("inject section into a binary", "[unit][binary_editor]") {
             REQUIRE(res == poly::BinaryEditorError::kSectionAlreadyExists);
         }
 
-        SECTION("inject a new section") {
+        SECTION("Inject a new section") {
             const std::string section_name = "new";
 
             const std::size_t size = 10000;
@@ -64,8 +64,8 @@ TEST_CASE("inject section into a binary", "[unit][binary_editor]") {
         }
     }
 
-    SECTION("update the content of a section") {
-        SECTION("update section that doesn't exists") {
+    SECTION("Update the content of a section") {
+        SECTION("Update section that doesn't exists") {
             const std::string section_name = "cannot_exist";
             const std::size_t size = 50;
             std::vector<std::uint8_t> data(size, 0xAA);
@@ -74,7 +74,7 @@ TEST_CASE("inject section into a binary", "[unit][binary_editor]") {
             REQUIRE(res == poly::BinaryEditorError::kSectionNotFound);
         }
 
-        SECTION("update existing section") {
+        SECTION("Update existing section") {
 #if defined(POLY_WINDOWS)
             const std::string section_name = ".data";
 #elif defined(POLY_MACOS)
@@ -112,7 +112,7 @@ TEST_CASE("inject section into a binary", "[unit][binary_editor]") {
         }
     }
 
-    SECTION("replace the entry") {
+    SECTION("Replace the entry") {
 #if defined(POLY_WINDOWS)
         auto bin = LIEF::PE::Parser::parse(hello_world_bin);
 #elif defined(POLY_MACOS)
