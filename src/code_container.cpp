@@ -140,19 +140,28 @@ namespace poly {
                         free_registers_, free_registers_.size());
 
                 auto it = free_registers_.find(random_reg);
-                if (it != free_registers_.end()) {
-                    free_registers_.erase(it);
-                }
 
                 switch (size) {
-                case 1:
-                    return *used_registers_.insert(random_reg.r8()).first;
-                case 2:
-                    return *used_registers_.insert(random_reg.r16()).first;
-                case 4:
-                    return *used_registers_.insert(random_reg.r32()).first;
-                default:
-                    return *used_registers_.insert(random_reg.r64()).first;
+                case 1: {
+                    auto &res = *used_registers_.insert(random_reg.r8()).first;
+                    free_registers_.erase(it);
+                    return res;
+                }
+                case 2: {
+                    auto &res = *used_registers_.insert(random_reg.r16()).first;
+                    free_registers_.erase(it);
+                    return res;
+                }
+                case 4: {
+                    auto &res = *used_registers_.insert(random_reg.r32()).first;
+                    free_registers_.erase(it);
+                    return res;
+                }
+                default: {
+                    auto &res = *used_registers_.insert(random_reg.r64()).first;
+                    free_registers_.erase(it);
+                    return res;
+                }
                 }
             }
         }

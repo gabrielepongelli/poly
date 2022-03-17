@@ -23,7 +23,7 @@ TEST_CASE("Produce machine code", "[unit][code_container]") {
         SECTION("Retrieve multiple different virtual registers") {
 
             std::uint8_t n =
-                Catch::Generators::RandomIntegerGenerator<std::uint8_t>(0, 255)
+                Catch::Generators::RandomIntegerGenerator<unsigned>(0, 255)
                     .get();
 
             std::vector<const asmjit::Operand *> results;

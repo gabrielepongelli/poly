@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include <memory>
 #include <random>
 #include <type_traits>
 #include <vector>

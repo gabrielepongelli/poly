@@ -116,7 +116,6 @@ namespace poly {
       private:
         struct StackPosition {
             asmjit::x86::Mem memory_block;
-            std::int32_t size;
             bool releasable;
 
             StackPosition(const asmjit::x86::Mem &mem);
