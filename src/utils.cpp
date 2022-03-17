@@ -18,4 +18,10 @@ namespace poly {
 
     RandomGenerator::RandomGenerator() : generator_{std::random_device{}()} {}
 
+    template <>
+    bool RandomGenerator::get_random<bool>() {
+        std::uniform_int_distribution<int> distribution{0, 1};
+        return distribution(generator_);
+    }
+
 } // namespace poly

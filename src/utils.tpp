@@ -14,6 +14,9 @@ namespace poly {
         return distribution(generator_);
     }
 
+    template <>
+    bool RandomGenerator::get_random<bool>();
+
     template <typename T>
     const T &RandomGenerator::random_from(const std::vector<T> &v) {
         std::uniform_int_distribution<std::size_t> distribution{0,
