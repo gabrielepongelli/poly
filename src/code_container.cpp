@@ -33,36 +33,36 @@ namespace poly {
 
     inline std::unordered_set<asmjit::x86::Gp, impl::OperandHash>
     CodeContainer::get_all_registers() {
-        return {builder_.zax(),
-                builder_.zbx(),
-                builder_.zcx(),
-                builder_.zdx(),
-                builder_.zbp(),
-                builder_.zsp(),
-                builder_.zsi(),
-                builder_.zdi(),
-                builder_.gpz(asmjit::x86::Gp::kIdR8),
-                builder_.gpz(asmjit::x86::Gp::kIdR9),
-                builder_.gpz(asmjit::x86::Gp::kIdR10),
-                builder_.gpz(asmjit::x86::Gp::kIdR11),
-                builder_.gpz(asmjit::x86::Gp::kIdR12),
-                builder_.gpz(asmjit::x86::Gp::kIdR13),
-                builder_.gpz(asmjit::x86::Gp::kIdR14),
-                builder_.gpz(asmjit::x86::Gp::kIdR15)};
+        return {compiler_.zax(),
+                compiler_.zbx(),
+                compiler_.zcx(),
+                compiler_.zdx(),
+                compiler_.zbp(),
+                compiler_.zsp(),
+                compiler_.zsi(),
+                compiler_.zdi(),
+                compiler_.gpz(asmjit::x86::Gp::kIdR8),
+                compiler_.gpz(asmjit::x86::Gp::kIdR9),
+                compiler_.gpz(asmjit::x86::Gp::kIdR10),
+                compiler_.gpz(asmjit::x86::Gp::kIdR11),
+                compiler_.gpz(asmjit::x86::Gp::kIdR12),
+                compiler_.gpz(asmjit::x86::Gp::kIdR13),
+                compiler_.gpz(asmjit::x86::Gp::kIdR14),
+                compiler_.gpz(asmjit::x86::Gp::kIdR15)};
     }
 
     CodeContainer::CodeContainer()
-        : code_holder_{}, builder_{}, free_registers_{get_all_registers()},
+        : code_holder_{}, compiler_{}, free_registers_{get_all_registers()},
           used_registers_{}, untouchable_registers_{}, used_stack_{},
           empty_operand_{} {
         code_holder_.init(asmjit::Environment::host());
-        code_holder_.attach(&builder_);
+        code_holder_.attach(&compiler_);
 
-        StackPosition first(asmjit::x86::Mem(builder_.zsp(), 0));
+        StackPosition first(asmjit::x86::Mem(compiler_.zsp(), 0));
         used_stack_.push_back(first);
     }
 
-    inline asmjit::x86::Builder &CodeContainer::builder() { return builder_; }
+    inline Compiler &CodeContainer::compiler() { return compiler_; }
 
     EditableCodeError CodeContainer::mark_as_free(const asmjit::Operand &op) {
         if (!op.isRegOrMem()) {
@@ -167,7 +167,7 @@ namespace poly {
         }
 
         StackPosition p(asmjit::x86::Mem(
-            builder_.zsp(), used_stack_.back().memory_block.offset() - size));
+            compiler_.zsp(), used_stack_.back().memory_block.offset() - size));
 
         used_stack_.push_back(p);
 
@@ -176,12 +176,12 @@ namespace poly {
 
     RawCode CodeContainer::produce_raw(Address jump_to, Address section_va,
                                        std::uint32_t alignement) {
-        builder_.jmp(jump_to);
+        compiler_.jmp(jump_to);
 
         auto *text_section = code_holder_.textSection();
 
         text_section->setAlignment(alignement);
-        builder_.finalize();
+        compiler_.finalize();
         code_holder_.flatten();
         code_holder_.resolveUnresolvedLinks();
         code_holder_.relocateToBase(section_va);

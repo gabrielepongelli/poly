@@ -69,26 +69,21 @@ TEST_CASE("Produce machine code", "[unit][code_container]") {
     }
 
     SECTION("Generate code that can be executed") {
-        auto &b = cc.builder();
+        auto &c = cc.compiler();
 
-        auto a_arg = b.zax();
-        auto b_arg = b.zbx();
+        auto *func_node = c.addFunc(
+            asmjit::FuncSignatureT<unsigned int, unsigned int, unsigned int>());
 
-        asmjit::FuncDetail func;
-        func.init(asmjit::FuncSignatureT<int, int, int>(),
-                  asmjit::Environment::host());
-        asmjit::FuncFrame frame;
-        frame.init(func);
-        asmjit::FuncArgsAssignment args(&func);
-        args.assignAll(a_arg, b_arg);
-        args.updateFuncFrame(frame);
-        frame.finalize();
+        auto arg1 = c.newUInt32();
+        auto arg2 = c.newUInt32();
 
-        b.emitProlog(frame);
-        b.emitArgsAssignment(frame, args);
-        b.add(a_arg, b_arg);
-        b.emitEpilog(frame);
-        b.ret();
+        func_node->setArg(0, arg1);
+        func_node->setArg(1, arg2);
+
+        c.add(arg1, arg2);
+        c.ret(arg1);
+
+        c.endFunc();
 
         // first and second arguments won't be used
         auto res = cc.produce_raw(0, 0);

@@ -25,6 +25,8 @@ namespace poly {
 
     } // namespace impl
 
+    using Compiler = asmjit::x86::Compiler;
+
     /**
      * ExecutableCode is an interface that defines a method to obtain the raw
      * code ready for being stored and used.
@@ -78,9 +80,9 @@ namespace poly {
         virtual EditableCodeError mark_as_free(const asmjit::Operand &op) = 0;
 
         /**
-         * Get a builder object to add new instructions.
+         * Get a compiler object ready to generate new instructions.
          */
-        virtual asmjit::x86::Builder &builder() = 0;
+        virtual Compiler &compiler() = 0;
 
         /**
          * Mark the specified operand as untouchable. An operand marked as
@@ -109,7 +111,7 @@ namespace poly {
 
         EditableCodeError mark_as_free(const asmjit::Operand &op);
 
-        asmjit::x86::Builder &builder();
+        Compiler &compiler();
 
         EditableCodeError mark_as_untouchable(const asmjit::Operand &op);
 
@@ -127,7 +129,7 @@ namespace poly {
         get_all_registers();
 
         asmjit::CodeHolder code_holder_;
-        asmjit::x86::Builder builder_;
+        Compiler compiler_;
         std::unordered_set<asmjit::x86::Gp, impl::OperandHash> free_registers_;
         std::unordered_set<asmjit::x86::Gp, impl::OperandHash> used_registers_;
         std::unordered_set<asmjit::x86::Gp, impl::OperandHash>
