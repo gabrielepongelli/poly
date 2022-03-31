@@ -49,8 +49,7 @@ TEST_CASE("Produce machine code", "[unit][code_container]") {
         auto &mem = cc.get_virtual_register(10);
 
         CHECK(mem.isMem());
-        CHECK(cc.mark_as_untouchable(mem) ==
-              poly::EditableCodeError::kInvalidOperand);
+        CHECK(cc.mark_as_untouchable(mem) == poly::Error::kInvalidOperand);
 
         while (true) {
             auto &reg = cc.get_virtual_register();
@@ -59,10 +58,8 @@ TEST_CASE("Produce machine code", "[unit][code_container]") {
                 continue;
             }
 
-            CHECK(cc.mark_as_untouchable(reg) ==
-                  poly::EditableCodeError::kNone);
-            REQUIRE(cc.mark_as_free(reg) ==
-                    poly::EditableCodeError::kOperandIsUntouchable);
+            CHECK(cc.mark_as_untouchable(reg) == poly::Error::kNone);
+            REQUIRE(cc.mark_as_free(reg) == poly::Error::kOperandIsUntouchable);
 
             break;
         }

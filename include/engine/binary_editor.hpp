@@ -55,14 +55,13 @@ namespace poly {
          * @param content the code that the new section will contain.
          * @return kNone if no error is raised.
          */
-        BinaryEditorError inject_section(const std::string &name,
-                                         const ExecutableCode &content) {
+        Error inject_section(const std::string &name,
+                             const ExecutableCode &content) {
             return this->real()->inject_section(name, content);
         }
 
-        BinaryEditorError
-        inject_section(const std::string &name,
-                       const std::vector<std::uint8_t> &content) {
+        Error inject_section(const std::string &name,
+                             const std::vector<std::uint8_t> &content) {
             return this->real()->inject_section(name, content);
         }
 
@@ -83,8 +82,8 @@ namespace poly {
          * @param va [out] calculated virtual address.
          * @return kNone if no error is raised.
          */
-        BinaryEditorError calculate_va(const std::string &name, Address &va,
-                                       const std::uint64_t offset = 0) {
+        Error calculate_va(const std::string &name, Address &va,
+                           const std::uint64_t offset = 0) {
             return this->real()->calculate_va(name, offset, va);
         }
 
@@ -97,14 +96,13 @@ namespace poly {
          * @param content the code that the new section will contain.
          * @return kNone if no error is raised.
          */
-        BinaryEditorError
-        update_content(const std::string &name,
-                       const std::vector<std::uint8_t> &content) {
+        Error update_content(const std::string &name,
+                             const std::vector<std::uint8_t> &content) {
             return this->real()->update_content(name, content);
         }
 
-        BinaryEditorError update_content(const std::string &name,
-                                         const ExecutableCode &content) {
+        Error update_content(const std::string &name,
+                             const ExecutableCode &content) {
             return this->real()->update_content(name, content);
         }
 
@@ -138,24 +136,22 @@ namespace poly {
 
         std::uint64_t text_section_size();
 
-        BinaryEditorError inject_section(const std::string &name,
-                                         const ExecutableCode &content);
+        Error inject_section(const std::string &name,
+                             const ExecutableCode &content);
 
-        BinaryEditorError
-        inject_section(const std::string &name,
-                       const std::vector<std::uint8_t> &content);
+        Error inject_section(const std::string &name,
+                             const std::vector<std::uint8_t> &content);
 
         Address replace_entry(Address new_entry);
 
-        BinaryEditorError calculate_va(const std::string &name, Address &va,
-                                       const std::uint64_t offset = 0);
+        Error calculate_va(const std::string &name, Address &va,
+                           const std::uint64_t offset = 0);
 
-        BinaryEditorError
-        update_content(const std::string &name,
-                       const std::vector<std::uint8_t> &content);
+        Error update_content(const std::string &name,
+                             const std::vector<std::uint8_t> &content);
 
-        BinaryEditorError update_content(const std::string &name,
-                                         const ExecutableCode &content);
+        Error update_content(const std::string &name,
+                             const ExecutableCode &content);
 
         void save_changes();
 

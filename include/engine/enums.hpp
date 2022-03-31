@@ -12,8 +12,8 @@ namespace poly {
      */
     enum class WordSize { k32Bit = 4, k64Bit = 8, kNotSupported = 0 };
 
-    enum class BinaryEditorError {
-        // No error is raised
+    enum class Error {
+        // No error has occurred
         kNone,
 
         // The section specified was not found
@@ -23,18 +23,13 @@ namespace poly {
         kSectionAlreadyExists,
 
         // The offset specified exceed the size of the section specified
-        kInvalidOffset
-    };
-
-    enum EditableCodeError {
-        // No error is raised
-        kNone,
+        kInvalidOffset,
 
         // The operand specified is not valid
         kInvalidOperand,
 
         // The operand specified has been marked as untouchable
-        kOperandIsUntouchable
+        kOperandIsUntouchable,
     };
 
     namespace impl {

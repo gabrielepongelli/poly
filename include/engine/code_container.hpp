@@ -77,7 +77,7 @@ namespace poly {
          * right type, kInvalidOperand will be returned. If op has been marked
          * as untouchable, kOperandIsUntouchable will be returned.
          */
-        virtual EditableCodeError mark_as_free(const asmjit::Operand &op) = 0;
+        virtual Error mark_as_free(const asmjit::Operand &op) = 0;
 
         /**
          * Get a compiler object ready to generate new instructions.
@@ -94,8 +94,7 @@ namespace poly {
          * @return kNone if everything is ok. If op isn't an operand of the
          * right type, kInvalidOperand will be returned.
          */
-        virtual EditableCodeError
-        mark_as_untouchable(const asmjit::Operand &op) = 0;
+        virtual Error mark_as_untouchable(const asmjit::Operand &op) = 0;
     };
 
     class CodeContainer : public ExecutableCode, public EditableCode {
@@ -109,11 +108,11 @@ namespace poly {
         const asmjit::Operand &
         get_virtual_register(std::uint8_t size = impl::byte_word_size);
 
-        EditableCodeError mark_as_free(const asmjit::Operand &op);
+        Error mark_as_free(const asmjit::Operand &op);
 
         Compiler &compiler();
 
-        EditableCodeError mark_as_untouchable(const asmjit::Operand &op);
+        Error mark_as_untouchable(const asmjit::Operand &op);
 
       private:
         struct StackPosition {

@@ -48,12 +48,12 @@ namespace poly {
     }
 
     template <HostOS OS>
-    BinaryEditorError
+    Error
     CommonBinaryEditor<OS>::inject_section(const std::string &name,
                                            const ExecutableCode &content){};
 
     template <HostOS OS>
-    BinaryEditorError CommonBinaryEditor<OS>::inject_section(
+    Error CommonBinaryEditor<OS>::inject_section(
         const std::string &name, const std::vector<std::uint8_t> &content){};
 
     template <HostOS OS>
@@ -67,44 +67,44 @@ namespace poly {
     CommonBinaryEditor<OS>::get_section(const std::string &name) {}
 
     template <HostOS OS>
-    BinaryEditorError
-    CommonBinaryEditor<OS>::calculate_va(const std::string &name, Address &va,
-                                         std::uint64_t offset) {
+    Error CommonBinaryEditor<OS>::calculate_va(const std::string &name,
+                                               Address &va,
+                                               std::uint64_t offset) {
         if (!has_section(name))
-            return BinaryEditorError::kSectionNotFound;
+            return Error::kSectionNotFound;
 
         auto *section = get_section(name);
 
         if (section->size() < offset)
-            return BinaryEditorError::kInvalidOffset;
+            return Error::kInvalidOffset;
 
         offset += section->offset();
         va = bin_->offset_to_virtual_address(offset);
 
-        return BinaryEditorError::kNone;
+        return Error::kNone;
     }
 
     template <HostOS OS>
-    BinaryEditorError CommonBinaryEditor<OS>::update_content(
+    Error CommonBinaryEditor<OS>::update_content(
         const std::string &name, const std::vector<std::uint8_t> &content) {
         if (!has_section(name))
-            return BinaryEditorError::kSectionNotFound;
+            return Error::kSectionNotFound;
 
         auto *section = get_section(name);
 
         section->size(content.size());
         section->content(content);
 
-        return BinaryEditorError::kNone;
+        return Error::kNone;
     }
 
     template <HostOS OS>
-    BinaryEditorError
+    Error
     CommonBinaryEditor<OS>::update_content(const std::string &name,
                                            const ExecutableCode &content) {
         // TODO: implement it
 
-        return BinaryEditorError::kNone;
+        return Error::kNone;
     }
 
     template <HostOS OS>

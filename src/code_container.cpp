@@ -64,9 +64,9 @@ namespace poly {
 
     inline Compiler &CodeContainer::compiler() { return compiler_; }
 
-    EditableCodeError CodeContainer::mark_as_free(const asmjit::Operand &op) {
+    Error CodeContainer::mark_as_free(const asmjit::Operand &op) {
         if (!op.isRegOrMem()) {
-            return EditableCodeError::kInvalidOperand;
+            return Error::kInvalidOperand;
         }
 
         if (op.isPhysReg()) {
@@ -80,7 +80,7 @@ namespace poly {
                     used_registers_.erase(used_it);
                 }
 
-                return EditableCodeError::kOperandIsUntouchable;
+                return Error::kOperandIsUntouchable;
             }
 
             auto it = used_registers_.find(reg);
@@ -95,7 +95,7 @@ namespace poly {
 
             // the memory wasn't in use
             if (it == used_stack_.rend()) {
-                return EditableCodeError::kNone;
+                return Error::kNone;
             }
             it->releasable = true;
 
@@ -105,13 +105,12 @@ namespace poly {
             }
         }
 
-        return EditableCodeError::kNone;
+        return Error::kNone;
     }
 
-    EditableCodeError
-    CodeContainer::mark_as_untouchable(const asmjit::Operand &op) {
+    Error CodeContainer::mark_as_untouchable(const asmjit::Operand &op) {
         if (!op.isPhysReg()) {
-            return EditableCodeError::kInvalidOperand;
+            return Error::kInvalidOperand;
         }
 
         auto reg = op.as<asmjit::x86::Gp>();
@@ -123,7 +122,7 @@ namespace poly {
 
         untouchable_registers_.insert(reg.r64());
 
-        return EditableCodeError::kNone;
+        return Error::kNone;
     }
 
     const asmjit::Operand &

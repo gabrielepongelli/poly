@@ -118,25 +118,25 @@ namespace poly {
     }
 
     template <>
-    BinaryEditorError CommonBinaryEditor<HostOS::kWindows>::inject_section(
+    Error CommonBinaryEditor<HostOS::kWindows>::inject_section(
         const std::string &name, const ExecutableCode &content) {
         // TODO: implement it
 
-        return BinaryEditorError::kNone;
+        return Error::kNone;
     }
 
     template <>
-    BinaryEditorError CommonBinaryEditor<HostOS::kWindows>::inject_section(
+    Error CommonBinaryEditor<HostOS::kWindows>::inject_section(
         const std::string &name, const std::vector<std::uint8_t> &content) {
         if (has_section(name)) {
-            return BinaryEditorError::kSectionAlreadyExists;
+            return Error::kSectionAlreadyExists;
         }
 
         bin_->add_section(
             *create_new_section(name, content.data(), content.size()),
             LIEF::PE::PE_SECTION_TYPES::TEXT);
 
-        return BinaryEditorError::kNone;
+        return Error::kNone;
     }
 
     template <>
@@ -151,10 +151,10 @@ namespace poly {
     }
 
     template <>
-    BinaryEditorError CommonBinaryEditor<HostOS::kWindows>::update_content(
+    Error CommonBinaryEditor<HostOS::kWindows>::update_content(
         const std::string &name, const std::vector<std::uint8_t> &content) {
         if (!has_section(name))
-            return BinaryEditorError::kSectionNotFound;
+            return Error::kSectionNotFound;
 
         auto *section = get_section(name);
 
@@ -163,7 +163,7 @@ namespace poly {
         section->size(content.size());
         section->content(content);
 
-        return BinaryEditorError::kNone;
+        return Error::kNone;
     }
 
 } // namespace poly

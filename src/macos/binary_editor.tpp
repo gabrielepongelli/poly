@@ -103,24 +103,24 @@ namespace poly {
     }
 
     template <>
-    BinaryEditorError CommonBinaryEditor<HostOS::kMacOS>::inject_section(
+    Error CommonBinaryEditor<HostOS::kMacOS>::inject_section(
         const std::string &name, const ExecutableCode &content) {
         // TODO: implement it
 
-        return BinaryEditorError::kNone;
+        return Error::kNone;
     }
 
     template <>
-    BinaryEditorError CommonBinaryEditor<HostOS::kMacOS>::inject_section(
+    Error CommonBinaryEditor<HostOS::kMacOS>::inject_section(
         const std::string &name, const std::vector<std::uint8_t> &content) {
         if (has_section(name)) {
-            return BinaryEditorError::kSectionAlreadyExists;
+            return Error::kSectionAlreadyExists;
         }
 
         bin_->add_section(
             *create_new_section(name, content.data(), content.size()));
 
-        return BinaryEditorError::kNone;
+        return Error::kNone;
     }
 
     template <>

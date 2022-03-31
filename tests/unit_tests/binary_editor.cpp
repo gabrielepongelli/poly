@@ -27,7 +27,7 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
             std::vector<std::uint8_t> data(size, 0xAA);
             auto res = be->inject_section(section_name, data);
 
-            REQUIRE(res == poly::BinaryEditorError::kSectionAlreadyExists);
+            REQUIRE(res == poly::Error::kSectionAlreadyExists);
         }
 
         SECTION("Inject a new section") {
@@ -39,7 +39,7 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
 
             auto res = be->inject_section(section_name, data);
 
-            CHECK(res == poly::BinaryEditorError::kNone);
+            CHECK(res == poly::Error::kNone);
 
             be->save_changes();
 
@@ -71,7 +71,7 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
             std::vector<std::uint8_t> data(size, 0xAA);
             auto res = be->update_content(section_name, data);
 
-            REQUIRE(res == poly::BinaryEditorError::kSectionNotFound);
+            REQUIRE(res == poly::Error::kSectionNotFound);
         }
 
         SECTION("Update existing section") {
@@ -87,7 +87,7 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
             std::vector<std::uint8_t> data(size, 0xAA);
             auto res = be->update_content(section_name, data);
 
-            CHECK(res == poly::BinaryEditorError::kNone);
+            CHECK(res == poly::Error::kNone);
 
             be->save_changes();
 
