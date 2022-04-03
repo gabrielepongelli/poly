@@ -15,9 +15,6 @@ namespace poly {
 
     namespace impl {
 
-        constexpr std::uint32_t byte_word_size =
-            static_cast<std::uint32_t>(poly::kWordSize);
-
         struct OperandHash {
 
             std::size_t operator()(asmjit::Operand_ const &op) const noexcept;
@@ -26,6 +23,8 @@ namespace poly {
     } // namespace impl
 
     using Compiler = asmjit::x86::Compiler;
+
+    using Register = asmjit::x86::Gp;
 
     /**
      * ExecutableCode is an interface that defines a method to obtain the raw
@@ -47,7 +46,7 @@ namespace poly {
          */
         virtual RawCode
         produce_raw(Address jump_to, Address section_va,
-                    std::uint32_t alignement = impl::byte_word_size) = 0;
+                    std::uint32_t alignement = kByteWordSize) = 0;
     };
 
     /**
@@ -67,7 +66,7 @@ namespace poly {
          * will be returned.
          */
         virtual const asmjit::Operand &
-        get_virtual_register(std::uint8_t size = impl::byte_word_size) = 0;
+        get_virtual_register(std::uint8_t size = kByteWordSize) = 0;
 
         /**
          * Mark the specified operand as free to be reused.
@@ -103,10 +102,10 @@ namespace poly {
         ~CodeContainer() = default;
 
         RawCode produce_raw(Address jump_to, Address section_va,
-                            std::uint32_t alignement = impl::byte_word_size);
+                            std::uint32_t alignement = kByteWordSize);
 
         const asmjit::Operand &
-        get_virtual_register(std::uint8_t size = impl::byte_word_size);
+        get_virtual_register(std::uint8_t size = kByteWordSize);
 
         Error mark_as_free(const asmjit::Operand &op);
 

@@ -9,6 +9,7 @@
 #include <asmjit/asmjit.h>
 
 #include "engine/enums.hpp"
+#include "engine/host_properties.hpp"
 #include "engine/utils.hpp"
 
 namespace poly {
@@ -132,7 +133,7 @@ namespace poly {
         }
 
         if (free_registers_.size() > 0 && (size & (size - 1)) == 0 &&
-            size <= impl::byte_word_size) {
+            size <= kByteWordSize) {
             if (RandomGenerator::get_generator().get_random<bool>()) {
                 auto &random_reg =
                     RandomGenerator::get_generator().random_from_it(

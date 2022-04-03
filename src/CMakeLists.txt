@@ -5,6 +5,7 @@ set(HEADER_LIST
     utils.hpp
     binary_editor.hpp
     code_container.hpp
+    encryption.hpp
 )
 
 set(SOURCE_LIST
@@ -13,6 +14,7 @@ set(SOURCE_LIST
     code_container.cpp
     utils.cpp
     utils.tpp
+    encryption.tpp
 )
 
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")

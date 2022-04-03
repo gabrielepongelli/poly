@@ -30,6 +30,22 @@ namespace poly {
 
         // The operand specified has been marked as untouchable
         kOperandIsUntouchable,
+
+        // The length of the data is not a multyple of size
+        kNotAligned
+    };
+
+    enum class EncryptionAlgorithmType {
+        // No encryption is performed
+        kNone,
+
+        // A xor will be used
+        kXor
+    };
+
+    enum class CipherMode {
+        // CBC mode will be used
+        kCBC
     };
 
     namespace impl {

@@ -73,7 +73,8 @@ namespace poly {
 #undef HOST_ARCH
 
     // Define the word size to use in the project's configurations.
-    constexpr WordSize kWordSize = static_cast<WordSize>(sizeof(void *));
+    constexpr std::uint8_t kByteWordSize = sizeof(void *);
+    constexpr WordSize kWordSize = static_cast<WordSize>(kByteWordSize);
 
     namespace impl {
         template <WordSize _Val>

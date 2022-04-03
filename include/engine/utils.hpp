@@ -25,6 +25,25 @@ namespace poly {
             return std::unique_ptr<To>{static_cast<To *>(old.release())};
         }
 
+        // range specialization
+        template <bool = true>
+        struct range;
+
+        // is_detected type trait
+        template <class... Ts>
+        using void_t = void;
+
+        template <template <class...> class Trait, class Enabler, class... Args>
+        struct is_detected_impl : std::false_type {};
+
+        template <template <class...> class Trait, class... Args>
+        struct is_detected_impl<Trait, void_t<Trait<Args...>>, Args...>
+            : std::true_type {};
+
+        template <template <class...> class Trait, class... Args>
+        using is_detected =
+            typename is_detected_impl<Trait, void, Args...>::type;
+
     } // namespace impl
 
     using Address = std::uint64_t;
