@@ -51,7 +51,7 @@ namespace poly {
     template <>
     impl::Section<HostOS::kWindows> *
     CommonBinaryEditor<HostOS::kWindows>::get_text_section() {
-        auto *section = &bin_->get_section(".text");
+        auto *section = bin_->get_section(".text");
 
         return static_cast<impl::Section<HostOS::kWindows> *>(section);
     }
@@ -63,25 +63,10 @@ namespace poly {
     }
 
     template <>
-    bool
-    CommonBinaryEditor<HostOS::kWindows>::has_section(const std::string &name) {
-        try {
-            bin_->get_section(name);
-            return true;
-        } catch (LIEF::not_found) {
-            return false;
-        }
-    }
-
-    template <>
     impl::Section<HostOS::kWindows> *
     CommonBinaryEditor<HostOS::kWindows>::get_section(const std::string &name) {
-        try {
-            return static_cast<impl::Section<HostOS::kWindows> *>(
-                &bin_->get_section(name));
-        } catch (LIEF::not_found) {
-            return nullptr;
-        }
+        return static_cast<impl::Section<HostOS::kWindows> *>(
+            bin_->get_section(name));
     }
 
     template <>

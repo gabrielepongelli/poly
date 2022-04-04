@@ -60,7 +60,9 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
 
             REQUIRE(section != bin->sections().end());
             REQUIRE(section->size() >= size);
-            REQUIRE_THAT(section->content(), Catch::Matchers::Contains(data));
+            REQUIRE_THAT(std::vector<std::uint8_t>(section->content().begin(),
+                                                   section->content().end()),
+                         Catch::Matchers::Contains(data));
         }
     }
 
@@ -108,7 +110,9 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
 
             REQUIRE(section != bin->sections().end());
             REQUIRE(section->size() >= size);
-            REQUIRE_THAT(section->content(), Catch::Matchers::Contains(data));
+            REQUIRE_THAT(std::vector<std::uint8_t>(section->content().begin(),
+                                                   section->content().end()),
+                         Catch::Matchers::Contains(data));
         }
     }
 

@@ -60,7 +60,9 @@ namespace poly {
     Address CommonBinaryEditor<OS>::replace_entry(Address new_entry){};
 
     template <HostOS OS>
-    bool CommonBinaryEditor<OS>::has_section(const std::string &name) {}
+    bool CommonBinaryEditor<OS>::has_section(const std::string &name) {
+        return bin_->get_section(name) != nullptr;
+    }
 
     template <HostOS OS>
     impl::Section<OS> *

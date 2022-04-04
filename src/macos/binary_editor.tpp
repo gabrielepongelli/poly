@@ -41,30 +41,24 @@ namespace poly {
     template <>
     impl::Section<HostOS::kMacOS> *
     CommonBinaryEditor<HostOS::kMacOS>::get_text_section() {
-        auto *section = &bin_->get_section("__text");
+        auto *section = bin_->get_section("__text");
 
         return static_cast<impl::Section<HostOS::kMacOS> *>(section);
     }
 
     template <>
     Address CommonBinaryEditor<HostOS::kMacOS>::get_entry_point_va() {
-        auto &segment_cmd = text_section_->segment();
-        auto entry_offset = bin_->main_command().entrypoint();
+        auto &segment_cmd = *text_section_->segment();
+        auto entry_offset = bin_->main_command()->entrypoint();
 
         return entry_offset + segment_cmd.virtual_address();
-    }
-
-    template <>
-    bool
-    CommonBinaryEditor<HostOS::kMacOS>::has_section(const std::string &name) {
-        return bin_->has_section(name);
     }
 
     template <>
     impl::Section<HostOS::kMacOS> *
     CommonBinaryEditor<HostOS::kMacOS>::get_section(const std::string &name) {
         return static_cast<impl::Section<HostOS::kMacOS> *>(
-            &bin_->get_section(name));
+            bin_->get_section(name));
     }
 
     template <>
@@ -78,7 +72,7 @@ namespace poly {
         auto entry_address = impl::get_entry_point_ra();
 
         // calculate the pointer which point to the start of the text section
-        auto offset = bin_->main_command().command_offset();
+        auto offset = bin_->main_command()->command_offset();
         entry_address -= offset;
 
         return entry_address;
@@ -126,10 +120,10 @@ namespace poly {
     template <>
     Address
     CommonBinaryEditor<HostOS::kMacOS>::replace_entry(Address new_entry) {
-        auto &segment_cmd = text_section_->segment();
+        auto &segment_cmd = *text_section_->segment();
 
-        bin_->main_command().entrypoint(new_entry -
-                                        segment_cmd.virtual_address());
+        bin_->main_command()->entrypoint(new_entry -
+                                         segment_cmd.virtual_address());
 
         auto old_entry_point = entry_point_va_;
         entry_point_va_ = get_entry_point_va();
