@@ -49,7 +49,8 @@ TEST_CASE("Encrypt and decrypt data", "[unit][encryption]") {
         std::uint8_t *ptr_to_encrypt =
             reinterpret_cast<std::uint8_t *>(&data_to_encrypt[0]);
 
-        auto res = MyCipher::encrypt<>(ptr_to_encrypt, size, secret);
+        poly::RawCode raw(ptr_to_encrypt, size);
+        auto res = MyCipher::encrypt<>(raw, secret);
 
         SECTION("No error occurred and data modified") {
             REQUIRE(res == poly::Error::kNone);
@@ -107,8 +108,8 @@ TEST_CASE("Encrypt and decrypt data", "[unit][encryption]") {
         std::uint8_t *ptr_to_encrypt =
             reinterpret_cast<std::uint8_t *>(&data_to_encrypt[0]);
 
-        auto res =
-            MyCipher::encrypt<>(ptr_to_encrypt, data_to_encrypt.size(), secret);
+        poly::RawCode raw(ptr_to_encrypt, size);
+        auto res = MyCipher::encrypt<>(raw, secret);
 
         SECTION("Encryption error raised and data not modified") {
             REQUIRE(res == poly::Error::kNotAligned);

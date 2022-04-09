@@ -6,7 +6,6 @@
 
 #include <asmjit/asmjit.h>
 
-#include "engine/code_container.hpp"
 #include "engine/encryption.hpp"
 #include "engine/enums.hpp"
 #include "engine/host_properties.hpp"
@@ -76,19 +75,18 @@ namespace poly {
         template <class Enc>
         template <std::uint8_t size>
         Error CipherImpl<CipherMode::kCBC, Enc>::encrypt(
-            std::uint8_t *data, std::size_t len,
-            const EncryptionSecret<size> &secret) {
-            if (len % size != 0) {
+            RawCode &data, const EncryptionSecret<size> &secret) noexcept {
+            if (data.size() % size != 0) {
                 return Error::kNotAligned;
             }
 
             auto working_data = secret.iv;
 
-            for (std::size_t i = 0; i < len; i = i + size) {
+            for (std::size_t i = 0; i < data.size(); i = i + size) {
                 working_data =
-                    working_data ^ BlockBuilder<size>::build(data + i);
+                    working_data ^ BlockBuilder<size>::build(data.data() + i);
                 Enc::template encrypt<size>(secret, working_data);
-                BlockBuilder<size>::to_bytes(working_data, data + i);
+                BlockBuilder<size>::to_bytes(working_data, data.data() + i);
             }
 
             return Error::kNone;
@@ -99,7 +97,7 @@ namespace poly {
         Error CipherImpl<CipherMode::kCBC, Enc>::assemble_decryption(
             const EncryptionSecret<size> &secret, Compiler &c,
             const Register &data_ptr, std::size_t data_len,
-            const asmjit::Label &exit_label) {
+            const asmjit::Label &exit_label) noexcept {
             if (data_len % size != 0) {
                 return Error::kNotAligned;
             }
@@ -141,39 +139,41 @@ namespace poly {
     } // namespace impl
 
     template <std::uint8_t size>
-    EncryptionSecret<size>::EncryptionSecret(Block<size> iv, Block<size> key)
+    EncryptionSecret<size>::EncryptionSecret(Block<size> iv,
+                                             Block<size> key) noexcept
         : iv{iv}, key{key} {}
 
     template <>
     template <std::uint8_t size>
     void EncryptionAlgorithm<EncryptionAlgorithmType::kNone>::encrypt(
-        const EncryptionSecret<size> &secret, Block<size> &data) {}
+        const EncryptionSecret<size> &secret, Block<size> &data) noexcept {}
 
     template <>
     template <std::uint8_t size>
     void
     EncryptionAlgorithm<EncryptionAlgorithmType::kNone>::assemble_decryption(
-        Register &key, Register &data, Compiler &c) {}
+        Register &key, Register &data, Compiler &c) noexcept {}
 
     template <>
     inline void
     EncryptionAlgorithm<EncryptionAlgorithmType::kXor>::encrypt<kByteWordSize>(
         const EncryptionSecret<kByteWordSize> &secret,
-        Block<kByteWordSize> &data) {
+        Block<kByteWordSize> &data) noexcept {
         data = data ^ secret.key;
     }
 
     template <>
     inline void
     EncryptionAlgorithm<EncryptionAlgorithmType::kXor>::assemble_decryption<
-        kByteWordSize>(Register &key, Register &data, Compiler &c) {
+        kByteWordSize>(Register &key, Register &data, Compiler &c) noexcept {
         c.xor_(data, key);
     }
 
     template <CipherMode M, class Enc>
     template <std::uint8_t size>
-    inline Error Cipher<M, Enc>::encrypt(std::uint8_t *data, std::size_t len,
-                                         const EncryptionSecret<size> &secret) {
+    inline Error
+    Cipher<M, Enc>::encrypt(RawCode &data,
+                            const EncryptionSecret<size> &secret) noexcept {
         static_assert(
             impl::supports_encrypt<Enc, const EncryptionSecret<size> &,
                                    Block<size> &>::value,
@@ -181,17 +181,15 @@ namespace poly {
             "template <std::uint8_t size> void encrypt(EncryptionSecret<size> "
             "&, Block<size> &)");
 
-        return impl::CipherImpl<M, Enc>::template encrypt<size>(data, len,
-                                                                secret);
+        return impl::CipherImpl<M, Enc>::template encrypt<size>(data, secret);
     }
 
     template <CipherMode M, class Enc>
     template <std::uint8_t size>
-    inline Error
-    Cipher<M, Enc>::assemble_decryption(const EncryptionSecret<size> &secret,
-                                        Compiler &c, const Register &data_ptr,
-                                        std::size_t data_len,
-                                        const asmjit::Label &exit_label) {
+    inline Error Cipher<M, Enc>::assemble_decryption(
+        const EncryptionSecret<size> &secret, Compiler &c,
+        const Register &data_ptr, std::size_t data_len,
+        const asmjit::Label &exit_label) noexcept {
         static_assert(
             impl::supports_assemble_decryption<Enc, Register &, Register &,
                                                Compiler &>::value,

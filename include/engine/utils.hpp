@@ -7,13 +7,16 @@
 #include <type_traits>
 #include <vector>
 
+#include <LIEF/LIEF.hpp>
+#include <asmjit/asmjit.h>
+
 namespace poly {
 
     namespace impl {
 
         // CRTP pattern base class
         template <class A>
-        class crtp_single_param {
+        class Crtp {
           protected:
             constexpr A *real() { return static_cast<A *>(this); }
         };
@@ -41,14 +44,18 @@ namespace poly {
             : std::true_type {};
 
         template <template <class...> class Trait, class... Args>
-        using is_detected =
+        using is_detected_t =
             typename is_detected_impl<Trait, void, Args...>::type;
 
     } // namespace impl
 
     using Address = std::uint64_t;
 
-    using RawCode = std::vector<std::uint8_t>;
+    using RawCode = LIEF::span<std::uint8_t>;
+
+    using Compiler = asmjit::x86::Compiler;
+
+    using Register = asmjit::x86::Gp;
 
     class RandomGenerator {
       public:

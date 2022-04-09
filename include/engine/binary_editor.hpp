@@ -8,7 +8,6 @@
 
 #include <LIEF/LIEF.hpp>
 
-#include "code_container.hpp"
 #include "enums.hpp"
 #include "host_properties.hpp"
 #include "utils.hpp"
@@ -16,33 +15,39 @@
 namespace poly {
 
     /**
-     * Interface that describe something that can modify a binary and retrieve
-     * some infos about it.
+     * Interface that describe an entity that can modify the structure and the
+     * content of a binary and can retrieve some infos about it.
      */
     template <class RealEditor>
-    class BinaryEditorInterface : public impl::crtp_single_param<RealEditor> {
+    class BinaryEditorInterface : public impl::Crtp<RealEditor> {
       public:
         /**
          * Get the virtual address of the actual entry point of the binary.
          */
-        Address entry_point() { return this->real()->entry_point(); }
+        inline Address entry_point() const noexcept {
+            return this->real()->entry_point();
+        }
 
         /**
          * Get the runtime address of the text section of the binary.
          * Warning: the return value of this method is correct only if the
          * binary is the same being executed by this process.
          */
-        Address text_section_ra() { return this->real()->text_section_ra(); }
+        inline Address text_section_ra() const noexcept {
+            return this->real()->text_section_ra();
+        }
 
         /**
          * Get the virtual address of the text section of the binary.
          */
-        Address text_section_va() { return this->real()->text_section_va(); }
+        inline Address text_section_va() const noexcept {
+            return this->real()->text_section_va();
+        }
 
         /**
          * Get the size in bytes of the text section of the binary.
          */
-        std::uint64_t text_section_size() {
+        inline std::uint64_t text_section_size() const noexcept {
             return this->real()->text_section_size();
         }
 
@@ -55,13 +60,8 @@ namespace poly {
          * @param content the code that the new section will contain.
          * @return kNone if no error is raised.
          */
-        Error inject_section(const std::string &name,
-                             const ExecutableCode &content) {
-            return this->real()->inject_section(name, content);
-        }
-
-        Error inject_section(const std::string &name,
-                             const std::vector<std::uint8_t> &content) {
+        inline Error inject_section(const std::string &name,
+                                    const RawCode &content) noexcept {
             return this->real()->inject_section(name, content);
         }
 
@@ -70,7 +70,7 @@ namespace poly {
          * @param new_entry virtual address of the new entry point.
          * @return the old entry point
          */
-        Address replace_entry(Address new_entry) {
+        inline Address replace_entry(Address new_entry) noexcept {
             return this->real()->replace_entry(new_entry);
         }
 
@@ -82,8 +82,9 @@ namespace poly {
          * @param va [out] calculated virtual address.
          * @return kNone if no error is raised.
          */
-        Error calculate_va(const std::string &name, Address &va,
-                           const std::uint64_t offset = 0) {
+        inline Error
+        calculate_va(const std::string &name, Address &va,
+                     const std::uint64_t offset = 0) const noexcept {
             return this->real()->calculate_va(name, offset, va);
         }
 
@@ -96,20 +97,15 @@ namespace poly {
          * @param content the code that the new section will contain.
          * @return kNone if no error is raised.
          */
-        Error update_content(const std::string &name,
-                             const std::vector<std::uint8_t> &content) {
-            return this->real()->update_content(name, content);
-        }
-
-        Error update_content(const std::string &name,
-                             const ExecutableCode &content) {
+        inline Error update_content(const std::string &name,
+                                    const RawCode &content) noexcept {
             return this->real()->update_content(name, content);
         }
 
         /**
          * Write the changes on the executable.
          */
-        void save_changes() { this->real()->save_changes(); }
+        inline void save_changes() noexcept { this->real()->save_changes(); }
     };
 
     namespace impl {
@@ -122,61 +118,75 @@ namespace poly {
 
     } // namespace impl
 
-    template <HostOS OS = HostOS::kNotSupported>
+    template <HostOS OS>
     class CommonBinaryEditor
         : public BinaryEditorInterface<CommonBinaryEditor<OS>> {
       public:
-        CommonBinaryEditor(const std::string name);
+        static_assert(OS != HostOS::kNotSupported,
+                      "This operating system is not supported.");
 
-        Address entry_point();
+        /**
+         * Build a new BinaryEditor.
+         * @param path path of the file to parse.
+         * @returns nullptr if the file in the path specified isn't an
+         * executable program or it doesn't have an entry point, otherwise a
+         * valid pointer will be returned.
+         */
+        static std::unique_ptr<BinaryEditorInterface<CommonBinaryEditor<OS>>>
+        build(const std::string &path) noexcept;
 
-        Address text_section_ra();
+        Address entry_point() const noexcept;
 
-        Address text_section_va();
+        Address text_section_ra() const noexcept;
 
-        std::uint64_t text_section_size();
+        Address text_section_va() const noexcept;
+
+        std::uint64_t text_section_size() const noexcept;
 
         Error inject_section(const std::string &name,
-                             const ExecutableCode &content);
+                             const RawCode &content) noexcept;
 
-        Error inject_section(const std::string &name,
-                             const std::vector<std::uint8_t> &content);
-
-        Address replace_entry(Address new_entry);
+        Address replace_entry(Address new_entry) noexcept;
 
         Error calculate_va(const std::string &name, Address &va,
-                           const std::uint64_t offset = 0);
+                           const std::uint64_t offset = 0) const noexcept;
 
         Error update_content(const std::string &name,
-                             const std::vector<std::uint8_t> &content);
+                             const RawCode &content) noexcept;
 
-        Error update_content(const std::string &name,
-                             const ExecutableCode &content);
+        void save_changes() noexcept;
 
-        void save_changes();
+      protected:
+        CommonBinaryEditor(std::unique_ptr<impl::Binary<OS>> &&bin,
+                           impl::Section<OS> *text_section,
+                           Address entry_va) noexcept;
 
       private:
-        std::unique_ptr<impl::Binary<OS>> parse_bin(const std::string name);
+        static std::unique_ptr<impl::Binary<OS>>
+        parse_bin(const std::string name) noexcept;
 
-        impl::Section<OS> *get_text_section();
+        static impl::Section<OS> *
+        get_text_section(impl::Binary<OS> &bin) noexcept;
 
-        Address get_entry_point_va();
+        static Address
+        get_entry_point_va(impl::Binary<OS> &bin,
+                           impl::Section<OS> &text_sect) noexcept;
 
-        bool has_section(const std::string &name);
+        bool has_section(const std::string &name) const noexcept;
 
-        impl::Section<OS> *get_section(const std::string &name);
+        impl::Section<OS> *get_section(const std::string &name) const noexcept;
 
         std::unique_ptr<impl::Section<OS>>
-        create_new_section(const std::string &name, const std::uint8_t *content,
-                           std::uint64_t size);
+        create_new_section(const std::string &name,
+                           const RawCode &content) noexcept;
 
         std::unique_ptr<impl::Binary<OS>> bin_;
         impl::Section<OS> *text_section_;
         Address entry_point_va_;
     };
 
-    using SpecificBinaryEditor = CommonBinaryEditor<kOS>;
-    using BinaryEditor = BinaryEditorInterface<SpecificBinaryEditor>;
+    using OsBinaryEditor = CommonBinaryEditor<kOS>;
+    using BinaryEditor = BinaryEditorInterface<OsBinaryEditor>;
 
 } // namespace poly
 

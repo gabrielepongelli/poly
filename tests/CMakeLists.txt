@@ -3,7 +3,6 @@ include(Catch)
 add_executable(tests 
     main.cpp
     unit_tests/binary_editor.cpp
-    unit_tests/code_container.cpp
     unit_tests/encryption.cpp
 )
 

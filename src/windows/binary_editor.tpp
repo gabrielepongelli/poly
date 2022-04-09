@@ -34,49 +34,40 @@ namespace poly {
         template <>
         struct Section<poly::HostOS::kWindows> : LIEF::PE::Section {};
 
-        extern "C" Address get_entry_point_ra();
+        extern "C" Address get_entry_point_ra() noexcept;
 
     } // namespace impl
 
     template <>
     std::unique_ptr<impl::Binary<HostOS::kWindows>>
-    CommonBinaryEditor<HostOS::kWindows>::parse_bin(const std::string name) {
+    CommonBinaryEditor<HostOS::kWindows>::parse_bin(
+        const std::string name) noexcept {
         auto bin = LIEF::PE::Parser::parse(name);
 
-        return std::move(
-            impl::static_unique_ptr_cast<impl::Binary<HostOS::kWindows>>(
-                std::move(bin)));
+        return impl::static_unique_ptr_cast<impl::Binary<HostOS::kWindows>>(
+            std::move(bin));
     }
 
     template <>
     impl::Section<HostOS::kWindows> *
-    CommonBinaryEditor<HostOS::kWindows>::get_text_section() {
-        auto *section = bin_->get_section(".text");
+    CommonBinaryEditor<HostOS::kWindows>::get_text_section(
+        impl::Binary<HostOS::kWindows> &bin) noexcept {
+        auto *section = bin.get_section(".text");
 
         return static_cast<impl::Section<HostOS::kWindows> *>(section);
     }
 
     template <>
-    Address CommonBinaryEditor<HostOS::kWindows>::get_entry_point_va() {
-        return bin_->offset_to_virtual_address(bin_->entrypoint()) -
-               bin_->imagebase();
+    Address CommonBinaryEditor<HostOS::kWindows>::get_entry_point_va(
+        impl::Binary<HostOS::kWindows> &bin,
+        impl::Section<HostOS::kWindows> &) noexcept {
+        return bin.offset_to_virtual_address(bin.entrypoint()) -
+               bin.imagebase();
     }
 
     template <>
-    impl::Section<HostOS::kWindows> *
-    CommonBinaryEditor<HostOS::kWindows>::get_section(const std::string &name) {
-        return static_cast<impl::Section<HostOS::kWindows> *>(
-            bin_->get_section(name));
-    }
-
-    template <>
-    CommonBinaryEditor<HostOS::kWindows>::CommonBinaryEditor(
-        const std::string name)
-        : bin_{parse_bin(name)}, text_section_{get_text_section()},
-          entry_point_va_{get_entry_point_va()} {}
-
-    template <>
-    Address CommonBinaryEditor<HostOS::kWindows>::text_section_ra() {
+    Address
+    CommonBinaryEditor<HostOS::kWindows>::text_section_ra() const noexcept {
         auto entry_address = impl::get_entry_point_ra();
 
         return entry_address - entry_point_va_;
@@ -85,8 +76,7 @@ namespace poly {
     template <>
     std::unique_ptr<impl::Section<HostOS::kWindows>>
     CommonBinaryEditor<HostOS::kWindows>::create_new_section(
-        const std::string &name, const std::uint8_t *content,
-        std::uint64_t size) {
+        const std::string &name, const RawCode &content) noexcept {
         auto section = std::make_unique<LIEF::PE::Section>(name);
 
         // say that the new section is executable and readable
@@ -95,49 +85,39 @@ namespace poly {
         section->add_characteristic(
             LIEF::PE::SECTION_CHARACTERISTICS::IMAGE_SCN_MEM_READ);
 
-        section->content(std::vector<uint8_t>{content, content + size});
+        section->content(std::vector<uint8_t>{content.begin(), content.end()});
 
-        return std::move(
-            impl::static_unique_ptr_cast<impl::Section<HostOS::kWindows>>(
-                std::move(section)));
+        return impl::static_unique_ptr_cast<impl::Section<HostOS::kWindows>>(
+            std::move(section));
     }
 
     template <>
     Error CommonBinaryEditor<HostOS::kWindows>::inject_section(
-        const std::string &name, const ExecutableCode &content) {
-        // TODO: implement it
-
-        return Error::kNone;
-    }
-
-    template <>
-    Error CommonBinaryEditor<HostOS::kWindows>::inject_section(
-        const std::string &name, const std::vector<std::uint8_t> &content) {
+        const std::string &name, const RawCode &content) noexcept {
         if (has_section(name)) {
             return Error::kSectionAlreadyExists;
         }
 
-        bin_->add_section(
-            *create_new_section(name, content.data(), content.size()),
-            LIEF::PE::PE_SECTION_TYPES::TEXT);
+        bin_->add_section(*create_new_section(name, content),
+                          LIEF::PE::PE_SECTION_TYPES::TEXT);
 
         return Error::kNone;
     }
 
     template <>
-    Address
-    CommonBinaryEditor<HostOS::kWindows>::replace_entry(Address new_entry) {
+    Address CommonBinaryEditor<HostOS::kWindows>::replace_entry(
+        Address new_entry) noexcept {
         bin_->optional_header().addressof_entrypoint(new_entry);
 
         auto old_entry_point = entry_point_va_;
-        entry_point_va_ = get_entry_point_va();
+        entry_point_va_ = get_entry_point_va(*bin_, *text_section_);
 
         return old_entry_point;
     }
 
     template <>
     Error CommonBinaryEditor<HostOS::kWindows>::update_content(
-        const std::string &name, const std::vector<std::uint8_t> &content) {
+        const std::string &name, const RawCode &content) noexcept {
         if (!has_section(name))
             return Error::kSectionNotFound;
 
@@ -146,7 +126,7 @@ namespace poly {
         // must be set also this, otherwise the new content will be truncated
         section->virtual_size(content.size());
         section->size(content.size());
-        section->content(content);
+        section->content({content.begin(), content.end()});
 
         return Error::kNone;
     }

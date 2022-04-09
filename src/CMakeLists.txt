@@ -4,14 +4,12 @@ set(HEADER_LIST
     host_properties.hpp
     utils.hpp
     binary_editor.hpp
-    code_container.hpp
     encryption.hpp
 )
 
 set(SOURCE_LIST
     engine.cpp
     binary_editor.tpp
-    code_container.cpp
     utils.cpp
     utils.tpp
     encryption.tpp

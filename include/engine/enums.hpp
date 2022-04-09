@@ -25,12 +25,6 @@ namespace poly {
         // The offset specified exceed the size of the section specified
         kInvalidOffset,
 
-        // The operand specified is not valid
-        kInvalidOperand,
-
-        // The operand specified has been marked as untouchable
-        kOperandIsUntouchable,
-
         // The length of the data is not a multyple of size
         kNotAligned
     };

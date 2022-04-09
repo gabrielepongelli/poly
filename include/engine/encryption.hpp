@@ -6,7 +6,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "code_container.hpp"
 #include "enums.hpp"
 #include "host_properties.hpp"
 #include "utils.hpp"
@@ -104,7 +103,7 @@ namespace poly {
         Block<size> iv;
         Block<size> key;
 
-        EncryptionSecret(Block<size> iv, Block<size> key);
+        EncryptionSecret(Block<size> iv, Block<size> key) noexcept;
     };
 
     /**
@@ -121,7 +120,7 @@ namespace poly {
          */
         template <std::uint8_t size = kByteWordSize>
         static void encrypt(const EncryptionSecret<size> &secret,
-                            Block<size> &data);
+                            Block<size> &data) noexcept;
 
         /**
          * Generate the assembly code to decrypt the data inside the register
@@ -135,18 +134,18 @@ namespace poly {
          */
         template <std::uint8_t size = kByteWordSize>
         static void assemble_decryption(Register &key, Register &data,
-                                        Compiler &c);
+                                        Compiler &c) noexcept;
     };
 
     template <>
     struct EncryptionAlgorithm<EncryptionAlgorithmType::kXor> {
         template <std::uint8_t size = kByteWordSize>
         static void encrypt(const EncryptionSecret<size> &secret,
-                            Block<size> &data);
+                            Block<size> &data) noexcept;
 
         template <std::uint8_t size = kByteWordSize>
         static void assemble_decryption(Register &key, Register &data,
-                                        Compiler &c);
+                                        Compiler &c) noexcept;
     };
 
     namespace impl {
@@ -157,15 +156,15 @@ namespace poly {
         template <class Enc>
         struct CipherImpl<CipherMode::kCBC, Enc> {
             template <std::uint8_t size>
-            static Error encrypt(std::uint8_t *data, std::size_t len,
-                                 const EncryptionSecret<size> &secret);
+            static Error encrypt(RawCode &data,
+                                 const EncryptionSecret<size> &secret) noexcept;
 
             template <std::uint8_t size = 8>
             static Error
             assemble_decryption(const EncryptionSecret<size> &secret,
                                 Compiler &c, const Register &data_ptr,
                                 std::size_t data_len,
-                                const asmjit::Label &exit_label);
+                                const asmjit::Label &exit_label) noexcept;
         };
 
         template <class T, typename... Args>
@@ -173,7 +172,7 @@ namespace poly {
             std::declval<Args>()...));
 
         template <class T, typename... Args>
-        using supports_encrypt = is_detected<encrypt_t, T, Args...>;
+        using supports_encrypt = is_detected_t<encrypt_t, T, Args...>;
 
         template <class T, typename... Args>
         using assemble_decryption_t =
@@ -182,7 +181,7 @@ namespace poly {
 
         template <class T, typename... Args>
         using supports_assemble_decryption =
-            is_detected<assemble_decryption_t, T, Args...>;
+            is_detected_t<assemble_decryption_t, T, Args...>;
 
     } // namespace impl
 
@@ -206,18 +205,15 @@ namespace poly {
         /**
          * Encrypt the specified data with the specified encryption secret. The
          * procedure will overwrite the plain data with the encrypted ones.
-         * @param data pointer to the first byte to encrypt. WARNING: the method
-         * assumes that the pointer passed is NOT NULL.
-         * @param len number of bytes of the data to encrypt. If is 0 this
-         * procedure does nothing. If its value is not a multiple of the
+         * @param data data to encrypt. If its size is not a multiple of the
          * non-type template parameter size, nothing will be modified and an
          * error will be returned.
          * @param secret encryption secret to use.
          * @returns kNone if no error has occurred.
          */
         template <std::uint8_t size = kByteWordSize>
-        static Error encrypt(std::uint8_t *data, std::size_t len,
-                             const EncryptionSecret<size> &secret);
+        static Error encrypt(RawCode &data,
+                             const EncryptionSecret<size> &secret) noexcept;
 
         /**
          * Generate the assembly code to decrypt the data specified with the
@@ -238,10 +234,10 @@ namespace poly {
          * @returns kNone if no error has occurred.
          */
         template <std::uint8_t size = kByteWordSize>
-        static Error assemble_decryption(const EncryptionSecret<size> &secret,
-                                         Compiler &c, const Register &data_ptr,
-                                         std::size_t data_len,
-                                         const asmjit::Label &exit_label);
+        static Error
+        assemble_decryption(const EncryptionSecret<size> &secret, Compiler &c,
+                            const Register &data_ptr, std::size_t data_len,
+                            const asmjit::Label &exit_label) noexcept;
     };
 
 } // namespace poly

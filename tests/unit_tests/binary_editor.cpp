@@ -11,7 +11,7 @@
 TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
     const std::string hello_world_bin =
         poly::kOS == poly::HostOS::kWindows ? "hello_world.exe" : "hello_world";
-    poly::BinaryEditor *be = new poly::SpecificBinaryEditor(hello_world_bin);
+    auto be = poly::OsBinaryEditor::build(hello_world_bin);
 
     SECTION("Inject a section") {
 

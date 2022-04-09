@@ -9,7 +9,6 @@
 #include <LIEF/LIEF.hpp>
 
 #include "engine/binary_editor.hpp"
-#include "engine/code_container.hpp"
 #include "engine/enums.hpp"
 #include "engine/host_properties.hpp"
 #include "engine/utils.hpp"
@@ -17,61 +16,107 @@
 namespace poly {
 
     template <HostOS OS>
-    CommonBinaryEditor<OS>::CommonBinaryEditor(const std::string name){};
+    inline std::unique_ptr<impl::Binary<OS>>
+    CommonBinaryEditor<OS>::parse_bin(const std::string name) noexcept {
+        return nullptr;
+    };
 
     template <HostOS OS>
-    std::unique_ptr<impl::Binary<OS>>
-    CommonBinaryEditor<OS>::parse_bin(const std::string name){};
+    inline impl::Section<OS> *
+    CommonBinaryEditor<OS>::get_text_section(impl::Binary<OS> &bin) noexcept {
+        return nullptr;
+    };
 
     template <HostOS OS>
-    impl::Section<OS> *CommonBinaryEditor<OS>::get_text_section(){};
+    inline Address CommonBinaryEditor<OS>::get_entry_point_va(
+        impl::Binary<OS> &bin, impl::Section<OS> &text_sect) noexcept {
+        return 0;
+    };
 
     template <HostOS OS>
-    Address CommonBinaryEditor<OS>::get_entry_point_va(){};
+    std::unique_ptr<BinaryEditorInterface<CommonBinaryEditor<OS>>>
+    CommonBinaryEditor<OS>::build(const std::string &path) noexcept {
+        auto bin = parse_bin(path);
+
+        if (bin == nullptr) {
+            return nullptr;
+        }
+
+        auto *text_sect = get_text_section(*bin);
+
+        if (text_sect == nullptr) {
+            return nullptr;
+        }
+
+        auto entry_va = get_entry_point_va(*bin, *text_sect);
+
+        if (entry_va == 0) {
+            return nullptr;
+        }
+
+        std::unique_ptr<BinaryEditorInterface<CommonBinaryEditor<OS>>> editor(
+            new CommonBinaryEditor<OS>(std::move(bin), text_sect, entry_va));
+
+        return editor;
+    }
 
     template <HostOS OS>
-    Address CommonBinaryEditor<OS>::entry_point() {
+    CommonBinaryEditor<OS>::CommonBinaryEditor(
+        std::unique_ptr<impl::Binary<OS>> &&bin,
+        impl::Section<OS> *text_section, Address entry_va) noexcept
+        : bin_{std::move(bin)}, text_section_{text_section}, entry_point_va_{
+                                                                 entry_va} {}
+
+    template <HostOS OS>
+    inline Address CommonBinaryEditor<OS>::entry_point() const noexcept {
         return entry_point_va_;
     }
 
     template <HostOS OS>
-    Address CommonBinaryEditor<OS>::text_section_ra(){};
+    inline Address CommonBinaryEditor<OS>::text_section_ra() const noexcept {
+        return 0;
+    };
 
     template <HostOS OS>
-    Address CommonBinaryEditor<OS>::text_section_va() {
+    inline Address CommonBinaryEditor<OS>::text_section_va() const noexcept {
         return text_section_->virtual_address();
     }
 
     template <HostOS OS>
-    std::uint64_t CommonBinaryEditor<OS>::text_section_size() {
+    inline std::uint64_t
+    CommonBinaryEditor<OS>::text_section_size() const noexcept {
         return text_section_->size();
     }
 
     template <HostOS OS>
-    Error
+    inline Error
     CommonBinaryEditor<OS>::inject_section(const std::string &name,
-                                           const ExecutableCode &content){};
+                                           const RawCode &content) noexcept {
+        return Error::kNone;
+    };
 
     template <HostOS OS>
-    Error CommonBinaryEditor<OS>::inject_section(
-        const std::string &name, const std::vector<std::uint8_t> &content){};
+    inline Address
+    CommonBinaryEditor<OS>::replace_entry(Address new_entry) noexcept {
+        return 0;
+    };
 
     template <HostOS OS>
-    Address CommonBinaryEditor<OS>::replace_entry(Address new_entry){};
-
-    template <HostOS OS>
-    bool CommonBinaryEditor<OS>::has_section(const std::string &name) {
+    inline bool CommonBinaryEditor<OS>::has_section(
+        const std::string &name) const noexcept {
         return bin_->get_section(name) != nullptr;
     }
 
     template <HostOS OS>
-    impl::Section<OS> *
-    CommonBinaryEditor<OS>::get_section(const std::string &name) {}
+    inline impl::Section<OS> *CommonBinaryEditor<OS>::get_section(
+        const std::string &name) const noexcept {
+        return static_cast<impl::Section<OS> *>(bin_->get_section(name));
+    }
 
     template <HostOS OS>
-    Error CommonBinaryEditor<OS>::calculate_va(const std::string &name,
-                                               Address &va,
-                                               std::uint64_t offset) {
+    Error
+    CommonBinaryEditor<OS>::calculate_va(const std::string &name, Address &va,
+                                         std::uint64_t offset) const noexcept {
         if (!has_section(name))
             return Error::kSectionNotFound;
 
@@ -87,36 +132,29 @@ namespace poly {
     }
 
     template <HostOS OS>
-    Error CommonBinaryEditor<OS>::update_content(
-        const std::string &name, const std::vector<std::uint8_t> &content) {
+    Error
+    CommonBinaryEditor<OS>::update_content(const std::string &name,
+                                           const RawCode &content) noexcept {
         if (!has_section(name))
             return Error::kSectionNotFound;
 
         auto *section = get_section(name);
 
         section->size(content.size());
-        section->content(content);
+        section->content({content.begin(), content.end()});
 
         return Error::kNone;
     }
 
     template <HostOS OS>
-    Error
-    CommonBinaryEditor<OS>::update_content(const std::string &name,
-                                           const ExecutableCode &content) {
-        // TODO: implement it
-
-        return Error::kNone;
-    }
+    inline std::unique_ptr<impl::Section<OS>>
+    CommonBinaryEditor<OS>::create_new_section(
+        const std::string &name, const RawCode &content) noexcept {
+        return nullptr;
+    };
 
     template <HostOS OS>
-    std::unique_ptr<impl::Section<OS>>
-    CommonBinaryEditor<OS>::create_new_section(const std::string &name,
-                                               const std::uint8_t *content,
-                                               std::uint64_t size){};
-
-    template <HostOS OS>
-    void CommonBinaryEditor<OS>::save_changes() {
+    inline void CommonBinaryEditor<OS>::save_changes() noexcept {
         bin_->write(bin_->name());
     }
 
