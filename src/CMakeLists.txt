@@ -17,31 +17,29 @@ set(SOURCE_LIST
 
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
     list(APPEND SOURCE_LIST
-        macos/binary_editor.tpp
+        macos/binary_editor.cpp
         macos/get_entry_point_ra.S
     )
 
-    #list(APPEND HEADER_LIST
-    #    ...
-    #    ...
-    #)
+    list(APPEND HEADER_LIST
+        macos/binary_editor.hpp
+    )
 endif()
 
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux")
     list(APPEND SOURCE_LIST
-        linux/binary_editor.tpp
+        linux/binary_editor.cpp
         linux/get_entry_point_ra.S
     )
 
-    #list(APPEND HEADER_LIST
-    #    ...
-    #    ...
-    #)
+    list(APPEND HEADER_LIST
+        linux/binary_editor.hpp
+    )
 endif()
 
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Windows")
     list(APPEND SOURCE_LIST
-        windows/binary_editor.tpp
+        windows/binary_editor.cpp
     )
 
     if (MSVC)
@@ -50,16 +48,15 @@ if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Windows")
         list(APPEND SOURCE_LIST windows/get_entry_point_ra.S)
     endif()
     
-    #list(APPEND HEADER_LIST
-    #    ...
-    #    ...
-    #)
+    list(APPEND HEADER_LIST
+        windows/binary_editor.hpp
+    )
 endif()
 
 # Append the include dir to all include files
 list(TRANSFORM HEADER_LIST PREPEND "${Poly_SOURCE_DIR}/include/engine/")
 
-add_library(engine STATIC ${SOURCE_LIST} ${HEADER_LIST})
+add_library(engine STATIC ${HEADER_LIST} ${SOURCE_LIST})
 
 # Required by AsmJIT to link itself statically in the correct way
 target_compile_definitions(engine PUBLIC ASMJIT_STATIC)

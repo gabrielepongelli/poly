@@ -27,5 +27,3 @@ endif()
 catch_discover_tests(tests
     WORKING_DIRECTORY "${TEST_DIR}"
 )
-
-message(STATUS "CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}")

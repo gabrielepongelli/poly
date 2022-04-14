@@ -1,4 +1,4 @@
-#pragma once
+#include "engine/binary_editor.hpp"
 
 #include <cstdint>
 
@@ -8,7 +8,6 @@
 
 #include <LIEF/LIEF.hpp>
 
-#include "engine/binary_editor.hpp"
 #include "engine/enums.hpp"
 #include "engine/host_properties.hpp"
 #include "engine/utils.hpp"
@@ -25,18 +24,6 @@
 #endif
 
 namespace poly {
-
-    namespace impl {
-
-        template <>
-        struct Binary<poly::HostOS::kWindows> : LIEF::PE::Binary {};
-
-        template <>
-        struct Section<poly::HostOS::kWindows> : LIEF::PE::Section {};
-
-        extern "C" Address get_entry_point_ra() noexcept;
-
-    } // namespace impl
 
     template <>
     std::unique_ptr<impl::Binary<HostOS::kWindows>>

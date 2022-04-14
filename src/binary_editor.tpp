@@ -13,6 +13,14 @@
 #include "engine/host_properties.hpp"
 #include "engine/utils.hpp"
 
+#if defined(POLY_LINUX)
+#include "engine/linux/binary_editor.hpp"
+#elif defined(POLY_MACOS)
+#include "engine/macos/binary_editor.hpp"
+#elif defined(POLY_WINDOWS)
+#include "engine/windows/binary_editor.hpp"
+#endif
+
 namespace poly {
 
     template <HostOS OS>
@@ -159,11 +167,3 @@ namespace poly {
     }
 
 } // namespace poly
-
-#if defined(POLY_LINUX)
-#include "linux/binary_editor.tpp"
-#elif defined(POLY_MACOS)
-#include "macos/binary_editor.tpp"
-#elif defined(POLY_WINDOWS)
-#include "windows/binary_editor.tpp"
-#endif
