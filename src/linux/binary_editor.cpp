@@ -1,4 +1,4 @@
-#include "engine/binary_editor.hpp"
+#include "engine/linux/binary_editor.hpp"
 
 #include <cstdint>
 
@@ -8,8 +8,8 @@
 
 #include <LIEF/LIEF.hpp>
 
+#include "engine/binary_editor.hpp"
 #include "engine/enums.hpp"
-#include "engine/host_properties.hpp"
 #include "engine/utils.hpp"
 
 namespace poly {
