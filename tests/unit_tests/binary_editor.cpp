@@ -16,13 +16,7 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
     SECTION("Inject a section") {
 
         SECTION("Inject an existing section") {
-#if defined(POLY_WINDOWS)
-            const std::string section_name = ".data";
-#elif defined(POLY_MACOS)
-            const std::string section_name = "__data";
-#elif defined(POLY_LINUX)
-            const std::string section_name = ".data";
-#endif
+            const std::string section_name = "data";
             const std::size_t size = 50;
             std::vector<std::uint8_t> data(size, 0xAA);
             auto res = be->inject_section(section_name, data);
@@ -31,25 +25,25 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
         }
 
         SECTION("Inject a new section") {
-            const std::string section_name = "new";
-
+            std::string section_name = "new";
             const std::size_t size = 10000;
-
             std::vector<std::uint8_t> data(size, 0xAA);
 
             auto res = be->inject_section(section_name, data);
-
             CHECK(res == poly::Error::kNone);
 
             be->save_changes();
 
 #if defined(POLY_WINDOWS)
             auto bin = LIEF::PE::Parser::parse(hello_world_bin);
+            section_name = "." + section_name;
 #elif defined(POLY_MACOS)
             auto bin = LIEF::MachO::Parser::parse(hello_world_bin)
                            ->take(LIEF::MachO::CPU_TYPES::CPU_TYPE_X86_64);
+            section_name = "__" + section_name;
 #elif defined(POLY_LINUX)
             auto bin = LIEF::ELF::Parser::parse(hello_world_bin);
+            section_name = "." + section_name;
 #endif
 
             auto section =
@@ -77,29 +71,25 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
         }
 
         SECTION("Update existing section") {
-#if defined(POLY_WINDOWS)
-            const std::string section_name = ".data";
-#elif defined(POLY_MACOS)
-            const std::string section_name = "__data";
-#elif defined(POLY_LINUX)
-            const std::string section_name = ".data";
-#endif
-
+            std::string section_name = "data";
             const std::size_t size = GENERATE(50, 10000);
             std::vector<std::uint8_t> data(size, 0xAA);
-            auto res = be->update_content(section_name, data);
 
+            auto res = be->update_content(section_name, data);
             CHECK(res == poly::Error::kNone);
 
             be->save_changes();
 
 #if defined(POLY_WINDOWS)
             auto bin = LIEF::PE::Parser::parse(hello_world_bin);
+            section_name = "." + section_name;
 #elif defined(POLY_MACOS)
             auto bin = LIEF::MachO::Parser::parse(hello_world_bin)
                            ->take(LIEF::MachO::CPU_TYPES::CPU_TYPE_X86_64);
+            section_name = "__" + section_name;
 #elif defined(POLY_LINUX)
             auto bin = LIEF::ELF::Parser::parse(hello_world_bin);
+            section_name = "." + section_name;
 #endif
 
             auto section =
@@ -114,36 +104,5 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
                                                    section->content().end()),
                          Catch::Matchers::Contains(data));
         }
-    }
-
-    SECTION("Replace the entry") {
-#if defined(POLY_WINDOWS)
-        auto bin = LIEF::PE::Parser::parse(hello_world_bin);
-#elif defined(POLY_MACOS)
-        auto bin = LIEF::MachO::Parser::parse(hello_world_bin)
-                       ->take(LIEF::MachO::CPU_TYPES::CPU_TYPE_X86_64);
-#elif defined(POLY_LINUX)
-        auto bin = LIEF::ELF::Parser::parse(hello_world_bin);
-#endif
-        constexpr poly::Address new_entry = 0;
-
-        be->replace_entry(new_entry);
-        be->save_changes();
-
-#if defined(POLY_WINDOWS)
-        bin = LIEF::PE::Parser::parse(hello_world_bin);
-#elif defined(POLY_MACOS)
-        bin = LIEF::MachO::Parser::parse(hello_world_bin)
-                  ->take(LIEF::MachO::CPU_TYPES::CPU_TYPE_X86_64);
-#elif defined(POLY_LINUX)
-        bin = LIEF::ELF::Parser::parse(hello_world_bin);
-#endif
-        auto effective_entry = bin->entrypoint();
-
-#ifdef POLY_WINDOWS
-        effective_entry -= bin->imagebase();
-#endif
-
-        REQUIRE(new_entry == effective_entry);
     }
 }

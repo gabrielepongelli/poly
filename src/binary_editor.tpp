@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include <istream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -23,147 +24,211 @@
 
 namespace poly {
 
-    template <HostOS OS>
-    inline std::unique_ptr<impl::Binary<OS>>
-    CommonBinaryEditor<OS>::parse_bin(const std::string name) noexcept {
-        return nullptr;
-    };
+    namespace impl {
 
-    template <HostOS OS>
-    inline impl::Section<OS> *
-    CommonBinaryEditor<OS>::get_text_section(impl::Binary<OS> &bin) noexcept {
-        return nullptr;
-    };
+        template <class Real>
+        std::unique_ptr<BinaryEditor<Real>>
+        CommonBinaryEditor<Real>::build(std::istream &src, std::size_t size,
+                                        const std::string &name) noexcept {
+            std::vector<std::uint8_t> raw(size, 0);
+            try {
+                src.read(reinterpret_cast<char *>(raw.data()), size);
+            } catch (std::ios_base::failure &e) {
+                if ((src.exceptions() & std::ios_base::eofbit) !=
+                    std::ios_base::eofbit) {
+                    return nullptr;
+                }
+            }
 
-    template <HostOS OS>
-    inline Address CommonBinaryEditor<OS>::get_entry_point_va(
-        impl::Binary<OS> &bin, impl::Section<OS> &text_sect) noexcept {
-        return 0;
-    };
-
-    template <HostOS OS>
-    std::unique_ptr<BinaryEditorInterface<CommonBinaryEditor<OS>>>
-    CommonBinaryEditor<OS>::build(const std::string &path) noexcept {
-        auto bin = parse_bin(path);
-
-        if (bin == nullptr) {
-            return nullptr;
+            return std::move(Real::build(raw, name));
         }
 
-        auto *text_sect = get_text_section(*bin);
+        template <class Real>
+        Address CommonBinaryEditor<Real>::align_to_page_size(
+            Address addr, std::size_t &len) noexcept {
+            Address end = len + addr;
+            Address start = addr & ~(Real::kPageSize - 1);
 
-        if (text_sect == nullptr) {
-            return nullptr;
+            len = end - start;
+
+            return start;
         }
 
-        auto entry_va = get_entry_point_va(*bin, *text_sect);
+        template <class Real>
+        Address CommonBinaryEditor<Real>::text_section_ra() const noexcept {
+            auto entry_address =
+                ProtectedAccessor::get_entry_point_ra(*this->real());
 
-        if (entry_va == 0) {
-            return nullptr;
+            entry_address -=
+                ProtectedAccessor::get_bin(*this->real()).entrypoint() -
+                ProtectedAccessor::get_text_section(*this->real())
+                    .virtual_address();
+
+            return entry_address;
+        };
+
+        template <class Real>
+        inline Address
+        CommonBinaryEditor<Real>::text_section_va() const noexcept {
+            return ProtectedAccessor::get_text_section(*this->real())
+                .virtual_address();
         }
 
-        std::unique_ptr<BinaryEditorInterface<CommonBinaryEditor<OS>>> editor(
-            new CommonBinaryEditor<OS>(std::move(bin), text_sect, entry_va));
+        template <class Real>
+        inline std::uint64_t
+        CommonBinaryEditor<Real>::text_section_size() const noexcept {
+            return ProtectedAccessor::get_text_section(*this->real()).size();
+        }
 
-        return editor;
-    }
+        template <class Real>
+        inline RawCode
+        CommonBinaryEditor<Real>::text_section_content() const noexcept {
+            auto content =
+                ProtectedAccessor::get_text_section(*this->real()).content();
+            return {(std::uint8_t *)content.data(), content.size()};
+        }
 
-    template <HostOS OS>
-    CommonBinaryEditor<OS>::CommonBinaryEditor(
-        std::unique_ptr<impl::Binary<OS>> &&bin,
-        impl::Section<OS> *text_section, Address entry_va) noexcept
-        : bin_{std::move(bin)}, text_section_{text_section}, entry_point_va_{
-                                                                 entry_va} {}
+        template <class Real>
+        inline Error CommonBinaryEditor<Real>::update_text_section_content(
+            const RawCode &content) noexcept {
+            return this->real()->update_content(
+                ProtectedAccessor::get_text_section(*this->real()).name(),
+                content);
+        }
 
-    template <HostOS OS>
-    inline Address CommonBinaryEditor<OS>::entry_point() const noexcept {
-        return entry_point_va_;
-    }
+        template <class Real>
+        Error CommonBinaryEditor<Real>::calculate_va(
+            const std::string &name, Address &va,
+            std::uint64_t offset) const noexcept {
+            if (!ProtectedAccessor::has_section(*this->real(), name))
+                return Error::kSectionNotFound;
 
-    template <HostOS OS>
-    inline Address CommonBinaryEditor<OS>::text_section_ra() const noexcept {
-        return 0;
-    };
+            auto *section = ProtectedAccessor::get_section(*this->real(), name);
 
-    template <HostOS OS>
-    inline Address CommonBinaryEditor<OS>::text_section_va() const noexcept {
-        return text_section_->virtual_address();
-    }
+            if (section->size() < offset)
+                return Error::kInvalidOffset;
 
-    template <HostOS OS>
-    inline std::uint64_t
-    CommonBinaryEditor<OS>::text_section_size() const noexcept {
-        return text_section_->size();
-    }
+            va = section->virtual_address() + offset;
 
-    template <HostOS OS>
-    inline Error
-    CommonBinaryEditor<OS>::inject_section(const std::string &name,
-                                           const RawCode &content) noexcept {
-        return Error::kNone;
-    };
+            return Error::kNone;
+        }
 
-    template <HostOS OS>
-    inline Address
-    CommonBinaryEditor<OS>::replace_entry(Address new_entry) noexcept {
-        return 0;
-    };
+        template <class Real>
+        Error CommonBinaryEditor<Real>::update_content(
+            const std::string &name, const RawCode &content) noexcept {
+            if (!ProtectedAccessor::has_section(*this->real(), name))
+                return Error::kSectionNotFound;
 
-    template <HostOS OS>
-    inline bool CommonBinaryEditor<OS>::has_section(
-        const std::string &name) const noexcept {
-        return bin_->get_section(name) != nullptr;
-    }
+            auto *section = ProtectedAccessor::get_section(*this->real(), name);
 
-    template <HostOS OS>
-    inline impl::Section<OS> *CommonBinaryEditor<OS>::get_section(
-        const std::string &name) const noexcept {
-        return static_cast<impl::Section<OS> *>(bin_->get_section(name));
-    }
+            section->size(content.size());
+            section->content({content.begin(), content.end()});
 
-    template <HostOS OS>
-    Error
-    CommonBinaryEditor<OS>::calculate_va(const std::string &name, Address &va,
-                                         std::uint64_t offset) const noexcept {
-        if (!has_section(name))
-            return Error::kSectionNotFound;
+            return Error::kNone;
+        }
 
-        auto *section = get_section(name);
+        template <class Real>
+        RawCode CommonBinaryEditor<Real>::get_section_content(
+            const std::string &name) const noexcept {
+            if (!ProtectedAccessor::has_section(*this->real(), name)) {
+                return {};
+            }
 
-        if (section->size() < offset)
-            return Error::kInvalidOffset;
+            auto res =
+                ProtectedAccessor::get_section(*this->real(), name)->content();
 
-        offset += section->offset();
-        va = bin_->offset_to_virtual_address(offset);
+            return {(std::uint8_t *)res.data(), res.size()};
+        }
 
-        return Error::kNone;
-    }
+        template <class Real>
+        void CommonBinaryEditor<Real>::save_changes(
+            const std::string &path) noexcept {
+            if (path.empty()) {
+                ProtectedAccessor::get_bin(*this->real())
+                    .write(ProtectedAccessor::get_bin(*this->real()).name());
+            } else {
+                ProtectedAccessor::get_bin(*this->real()).write(path);
+            }
+        }
 
-    template <HostOS OS>
-    Error
-    CommonBinaryEditor<OS>::update_content(const std::string &name,
-                                           const RawCode &content) noexcept {
-        if (!has_section(name))
-            return Error::kSectionNotFound;
+        template <class Real>
+        inline bool CommonBinaryEditor<Real>::ProtectedAccessor::has_section(
+            const Real &real, const std::string &name) noexcept {
+            constexpr bool (Real::*fn)(const std::string &) const noexcept =
+                &ProtectedAccessor::has_section_impl;
 
-        auto *section = get_section(name);
+            return (real.*fn)(std::forward<const std::string &>(name));
+        }
 
-        section->size(content.size());
-        section->content({content.begin(), content.end()});
+        template <class Real>
+        inline OsSection *
+        CommonBinaryEditor<Real>::ProtectedAccessor::get_section(
+            Real &real, const std::string &name) noexcept {
+            constexpr OsSection *(Real::*fn)(const std::string &) noexcept =
+                &ProtectedAccessor::get_section_impl;
 
-        return Error::kNone;
-    }
+            return (real.*fn)(std::forward<const std::string &>(name));
+        }
 
-    template <HostOS OS>
-    inline std::unique_ptr<impl::Section<OS>>
-    CommonBinaryEditor<OS>::create_new_section(
-        const std::string &name, const RawCode &content) noexcept {
-        return nullptr;
-    };
+        template <class Real>
+        inline const OsSection *
+        CommonBinaryEditor<Real>::ProtectedAccessor::get_section(
+            const Real &real, const std::string &name) noexcept {
+            constexpr const OsSection *(Real::*fn)(const std::string &)
+                const noexcept = &ProtectedAccessor::get_section_impl;
 
-    template <HostOS OS>
-    inline void CommonBinaryEditor<OS>::save_changes() noexcept {
-        bin_->write(bin_->name());
-    }
+            return (real.*fn)(std::forward<const std::string &>(name));
+        }
+
+        template <class Real>
+        inline OsSection &
+        CommonBinaryEditor<Real>::ProtectedAccessor::get_text_section(
+            Real &real) noexcept {
+            constexpr OsSection &(Real::*fn)() noexcept =
+                &ProtectedAccessor::get_text_section_impl;
+
+            return (real.*fn)();
+        }
+
+        template <class Real>
+        inline const OsSection &
+        CommonBinaryEditor<Real>::ProtectedAccessor::get_text_section(
+            const Real &real) noexcept {
+            constexpr const OsSection &(Real::*fn)() const noexcept =
+                &ProtectedAccessor::get_text_section_impl;
+
+            return (real.*fn)();
+        }
+
+        template <class Real>
+        inline OsBinary &CommonBinaryEditor<Real>::ProtectedAccessor::get_bin(
+            Real &real) noexcept {
+            constexpr OsBinary &(Real::*fn)() noexcept =
+                &ProtectedAccessor::get_bin_impl;
+
+            return (real.*fn)();
+        }
+
+        template <class Real>
+        inline const OsBinary &
+        CommonBinaryEditor<Real>::ProtectedAccessor::get_bin(
+            const Real &real) noexcept {
+            constexpr const OsBinary &(Real::*fn)() const noexcept =
+                &ProtectedAccessor::get_bin_impl;
+
+            return (real.*fn)();
+        }
+
+        template <class Real>
+        inline Address
+        CommonBinaryEditor<Real>::ProtectedAccessor::get_entry_point_ra(
+            const Real &real) noexcept {
+            constexpr Address (Real::*fn)() const noexcept =
+                &ProtectedAccessor::get_entry_point_ra_impl;
+
+            return (real.*fn)();
+        }
+
+    } // namespace impl
 
 } // namespace poly

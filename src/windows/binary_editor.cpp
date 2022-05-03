@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -10,6 +11,7 @@
 
 #include "engine/binary_editor.hpp"
 #include "engine/enums.hpp"
+#include "engine/host_properties.hpp"
 #include "engine/utils.hpp"
 
 // Needed to avoid some clash between enums and symbols defined in Windows.h,
@@ -25,98 +27,167 @@
 
 namespace poly {
 
-    template <>
-    std::unique_ptr<impl::Binary<HostOS::kWindows>>
-    CommonBinaryEditor<HostOS::kWindows>::parse_bin(
-        const std::string name) noexcept {
-        auto bin = LIEF::PE::Parser::parse(name);
+    namespace impl {
 
-        return impl::static_unique_ptr_cast<impl::Binary<HostOS::kWindows>>(
-            std::move(bin));
-    }
+        const std::string CustomBinaryEditor<HostOS::kWindows>::kSectionPrefix =
+            ".";
 
-    template <>
-    impl::Section<HostOS::kWindows> *
-    CommonBinaryEditor<HostOS::kWindows>::get_text_section(
-        impl::Binary<HostOS::kWindows> &bin) noexcept {
-        auto *section = bin.get_section(".text");
+        std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kWindows>>>
+        CustomBinaryEditor<HostOS::kWindows>::build(
+            const std::string &path) noexcept {
+            auto bin = LIEF::PE::Parser::parse(path);
 
-        return static_cast<impl::Section<HostOS::kWindows> *>(section);
-    }
-
-    template <>
-    Address CommonBinaryEditor<HostOS::kWindows>::get_entry_point_va(
-        impl::Binary<HostOS::kWindows> &bin,
-        impl::Section<HostOS::kWindows> &) noexcept {
-        return bin.offset_to_virtual_address(bin.entrypoint()) -
-               bin.imagebase();
-    }
-
-    template <>
-    Address
-    CommonBinaryEditor<HostOS::kWindows>::text_section_ra() const noexcept {
-        auto entry_address = impl::get_entry_point_ra();
-
-        return entry_address - entry_point_va_;
-    }
-
-    template <>
-    std::unique_ptr<impl::Section<HostOS::kWindows>>
-    CommonBinaryEditor<HostOS::kWindows>::create_new_section(
-        const std::string &name, const RawCode &content) noexcept {
-        auto section = std::make_unique<LIEF::PE::Section>(name);
-
-        // say that the new section is executable and readable
-        section->add_characteristic(
-            LIEF::PE::SECTION_CHARACTERISTICS::IMAGE_SCN_MEM_EXECUTE);
-        section->add_characteristic(
-            LIEF::PE::SECTION_CHARACTERISTICS::IMAGE_SCN_MEM_READ);
-
-        section->content(std::vector<uint8_t>{content.begin(), content.end()});
-
-        return impl::static_unique_ptr_cast<impl::Section<HostOS::kWindows>>(
-            std::move(section));
-    }
-
-    template <>
-    Error CommonBinaryEditor<HostOS::kWindows>::inject_section(
-        const std::string &name, const RawCode &content) noexcept {
-        if (has_section(name)) {
-            return Error::kSectionAlreadyExists;
+            return check_and_init(std::move(bin));
         }
 
-        bin_->add_section(*create_new_section(name, content),
-                          LIEF::PE::PE_SECTION_TYPES::TEXT);
+        std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kWindows>>>
+        CustomBinaryEditor<HostOS::kWindows>::build(
+            const std::vector<std::uint8_t> &raw,
+            const std::string &name) noexcept {
+            auto bin = LIEF::PE::Parser::parse(path);
 
-        return Error::kNone;
-    }
+            return check_and_init(std::move(bin));
+        }
 
-    template <>
-    Address CommonBinaryEditor<HostOS::kWindows>::replace_entry(
-        Address new_entry) noexcept {
-        bin_->optional_header().addressof_entrypoint(new_entry);
+        Address CustomBinaryEditor<HostOS::kWindows>::first_execution_va()
+            const noexcept {
+            if (this->has_tls()) {
+                return this->first_tls_callback();
+            } else {
+                return this->bin_->entrypoint() - this->bin_->imagebase();
+            }
+        }
 
-        auto old_entry_point = entry_point_va_;
-        entry_point_va_ = get_entry_point_va(*bin_, *text_section_);
+        Address
+        CustomBinaryEditor<HostOS::kWindows>::exec_first(Address va) noexcept {
+            auto old = this->first_execution_va();
 
-        return old_entry_point;
-    }
+            if (this->has_tls()) {
+                this->first_tls_callback(va);
+            } else {
+                this->bin_->optional_header().addressof_entrypoint(
+                    va + this->bin_->imagebase());
+            }
 
-    template <>
-    Error CommonBinaryEditor<HostOS::kWindows>::update_content(
-        const std::string &name, const RawCode &content) noexcept {
-        if (!has_section(name))
-            return Error::kSectionNotFound;
+            return old;
+        }
 
-        auto *section = get_section(name);
+        Error CustomBinaryEditor<HostOS::kWindows>::inject_section(
+            const std::string &name, const RawCode &content) noexcept {
+            if (this->has_section_impl(name)) {
+                return Error::kSectionAlreadyExists;
+            }
 
-        // must be set also this, otherwise the new content will be truncated
-        section->virtual_size(content.size());
-        section->size(content.size());
-        section->content({content.begin(), content.end()});
+            // create the new section with the generated code inside
+            LIEF::PE::Section section({content.begin(), content.end()},
+                                      kSectionPrefix + name);
 
-        return Error::kNone;
-    }
+            // say that the new section is executable and readable
+            section.add_characteristic(
+                LIEF::PE::SECTION_CHARACTERISTICS::IMAGE_SCN_MEM_EXECUTE);
+            section.add_characteristic(
+                LIEF::PE::SECTION_CHARACTERISTICS::IMAGE_SCN_MEM_READ);
+            section.add_characteristic(
+                LIEF::PE::SECTION_CHARACTERISTICS::IMAGE_SCN_CNT_CODE);
+
+            this->bin_->add_section(section, LIEF::PE::PE_SECTION_TYPES::TEXT);
+
+            return Error::kNone;
+        }
+
+        Address CustomBinaryEditor<HostOS::kWindows>::get_imported_function_va(
+            const std::string &import_name,
+            const std::string &function_name) const noexcept {
+            auto *import = this->bin_->get_import(import_name);
+
+            if (import == nullptr ||
+                import->get_entry(function_name) == nullptr) {
+                return 0;
+            }
+
+            return import->get_function_rva_from_iat(function_name) +
+                   import->import_address_table_rva();
+        }
+
+        void CustomBinaryEditor<HostOS::kWindows>::save_changes(
+            const std::string &path) noexcept {
+            LIEF::PE::Builder builder(*bin_);
+
+            builder.build();
+
+            if (path.empty()) {
+                builder.write(bin_->name());
+            } else {
+                builder.write(path);
+            }
+        }
+
+        CustomBinaryEditor<HostOS::kWindows>::CustomBinaryEditor(
+            std::unique_ptr<LIEF::PE::Binary> &&bin,
+            LIEF::PE::Section &text_section) noexcept
+            : bin_{std::move(bin)}, text_section_{text_section} {}
+
+        std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kWindows>>>
+        CustomBinaryEditor<HostOS::kWindows>::check_and_init(
+            std::unique_ptr<LIEF::PE::Binary> &&bin) {
+            if (bin == nullptr || ((bin->header().characteristics() &
+                                    LIEF::PE::HEADER_CHARACTERISTICS::
+                                        IMAGE_FILE_EXECUTABLE_IMAGE) !=
+                                   LIEF::PE::HEADER_CHARACTERISTICS::
+                                       IMAGE_FILE_EXECUTABLE_IMAGE)) {
+                return nullptr;
+            }
+
+            auto *text_sect = bin->get_section(kSectionPrefix + "text");
+
+            if (text_sect == nullptr) {
+                return nullptr;
+            }
+
+            std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kWindows>>>
+                editor(new CustomBinaryEditor<HostOS::kWindows>(std::move(bin),
+                                                                *text_sect));
+
+            return editor;
+        }
+
+        bool CustomBinaryEditor<HostOS::kWindows>::has_tls() const noexcept {
+            if (!this->bin_->has_tls()) {
+                return false;
+            }
+
+            return this->bin_->tls().callbacks().size() > 0;
+        }
+
+        Address CustomBinaryEditor<HostOS::kWindows>::first_tls_callback()
+            const noexcept {
+            if (!this->has_tls()) {
+                return 0;
+            }
+
+            auto res =
+                this->bin_->tls().callbacks().at(0) - this->bin_->imagebase();
+
+            return res;
+        }
+
+        Error CustomBinaryEditor<HostOS::kWindows>::first_tls_callback(
+            Address va) noexcept {
+            if (!this->has_tls()) {
+                return Error::kSectionNotFound;
+            }
+
+            auto &tls = this->bin_->tls();
+            auto patch = va + this->bin_->imagebase();
+
+            this->bin_->patch_address(tls.addressof_callbacks(), patch,
+                                      kByteWordSize,
+                                      LIEF::Binary::VA_TYPES::VA);
+
+            return Error::kNone;
+        }
+
+    } // namespace impl
 
 } // namespace poly
 

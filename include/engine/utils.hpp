@@ -19,6 +19,10 @@ namespace poly {
         class Crtp {
           protected:
             constexpr A *real() { return static_cast<A *>(this); }
+
+            constexpr const A *real() const {
+                return static_cast<const A *>(this);
+            }
         };
 
         // Unique pointer static cast

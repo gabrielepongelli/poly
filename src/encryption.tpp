@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include <algorithm>
 #include <bitset>
 
 #include <asmjit/asmjit.h>
@@ -75,21 +76,25 @@ namespace poly {
         template <class Enc>
         template <std::uint8_t size>
         Error CipherImpl<CipherMode::kCBC, Enc>::encrypt(
-            RawCode &data, const EncryptionSecret<size> &secret) noexcept {
-            if (data.size() % size != 0) {
-                return Error::kNotAligned;
-            }
-
+            RawCode &src, RawCode &dst,
+            const EncryptionSecret<size> &secret) noexcept {
             auto working_data = secret.iv;
-
-            for (std::size_t i = 0; i < data.size(); i = i + size) {
+            auto extra_data_src = src.size() % size;
+            auto extra_data_dst = dst.size() % size;
+            auto for_limit = std::min(src.size() - extra_data_src,
+                                      dst.size() - extra_data_dst);
+            for (std::size_t i = 0; i < for_limit; i = i + size) {
                 working_data =
-                    working_data ^ BlockBuilder<size>::build(data.data() + i);
+                    working_data ^ BlockBuilder<size>::build(src.data() + i);
                 Enc::template encrypt<size>(secret, working_data);
-                BlockBuilder<size>::to_bytes(working_data, data.data() + i);
+                BlockBuilder<size>::to_bytes(working_data, dst.data() + i);
             }
 
-            return Error::kNone;
+            if (extra_data_src != 0 || extra_data_dst != 0) {
+                return Error::kNotAligned;
+            } else {
+                return Error::kNone;
+            }
         }
 
         template <class Enc>
@@ -98,9 +103,8 @@ namespace poly {
             const EncryptionSecret<size> &secret, Compiler &c,
             const Register &data_ptr, std::size_t data_len,
             const asmjit::Label &exit_label) noexcept {
-            if (data_len % size != 0) {
-                return Error::kNotAligned;
-            }
+            auto extra_data = data_len % size;
+            data_len = data_len - extra_data;
 
             auto Loop = c.newLabel();
             auto counter = c.newUInt64();
@@ -133,7 +137,11 @@ namespace poly {
             // if counter > 0 then goto Loop
             c.jg(Loop);
 
-            return Error::kNone;
+            if (extra_data != 0) {
+                return Error::kNotAligned;
+            } else {
+                return Error::kNone;
+            }
         }
 
     } // namespace impl
@@ -172,6 +180,22 @@ namespace poly {
     template <CipherMode M, class Enc>
     template <std::uint8_t size>
     inline Error
+    Cipher<M, Enc>::encrypt(RawCode &src, RawCode &dst,
+                            const EncryptionSecret<size> &secret) noexcept {
+        static_assert(
+            impl::supports_encrypt<Enc, const EncryptionSecret<size> &,
+                                   Block<size> &>::value,
+            "Enc template parameter must implement this static method: "
+            "template <std::uint8_t size> void encrypt(EncryptionSecret<size> "
+            "&, Block<size> &)");
+
+        return impl::CipherImpl<M, Enc>::template encrypt<size>(src, dst,
+                                                                secret);
+    }
+
+    template <CipherMode M, class Enc>
+    template <std::uint8_t size>
+    inline Error
     Cipher<M, Enc>::encrypt(RawCode &data,
                             const EncryptionSecret<size> &secret) noexcept {
         static_assert(
@@ -181,7 +205,8 @@ namespace poly {
             "template <std::uint8_t size> void encrypt(EncryptionSecret<size> "
             "&, Block<size> &)");
 
-        return impl::CipherImpl<M, Enc>::template encrypt<size>(data, secret);
+        return impl::CipherImpl<M, Enc>::template encrypt<size>(data, data,
+                                                                secret);
     }
 
     template <CipherMode M, class Enc>

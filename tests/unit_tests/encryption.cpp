@@ -38,12 +38,11 @@ TEST_CASE("Encrypt and decrypt data", "[unit][encryption]") {
         poly::CipherMode::kCBC,
         poly::EncryptionAlgorithm<poly::EncryptionAlgorithmType::kXor>>;
 
-    constexpr auto word_size = static_cast<std::uint8_t>(poly::kWordSize);
-
-    auto secret = poly::EncryptionSecret<word_size>(get(gen), get(gen));
+    auto secret =
+        poly::EncryptionSecret<poly::kByteWordSize>(get(gen), get(gen));
 
     SECTION("Encryption and decryption of aligned data") {
-        auto size = (get(gen) % 255) * word_size;
+        auto size = (get(gen) % 255) * poly::kByteWordSize;
         auto data_to_encrypt = gen_random_string(size, gen);
         auto data_copy = data_to_encrypt;
         std::uint8_t *ptr_to_encrypt =
@@ -99,7 +98,7 @@ TEST_CASE("Encrypt and decrypt data", "[unit][encryption]") {
 
     SECTION("Encryption and decryption of not-aligned data") {
         auto size = (get(gen) % 255);
-        while (size % word_size == 0) {
+        while (size % poly::kByteWordSize == 0) {
             size = (get(gen) % 255);
         }
 
@@ -111,9 +110,8 @@ TEST_CASE("Encrypt and decrypt data", "[unit][encryption]") {
         poly::RawCode raw(ptr_to_encrypt, size);
         auto res = MyCipher::encrypt<>(raw, secret);
 
-        SECTION("Encryption error raised and data not modified") {
+        SECTION("Encryption error raised") {
             REQUIRE(res == poly::Error::kNotAligned);
-            REQUIRE(data_to_encrypt == data_copy);
         }
 
         SECTION("Decryption error raised") {

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -10,93 +11,138 @@
 
 #include "engine/binary_editor.hpp"
 #include "engine/enums.hpp"
+#include "engine/host_properties.hpp"
 #include "engine/utils.hpp"
 
 namespace poly {
 
-    template <>
-    std::unique_ptr<impl::Binary<HostOS::kMacOS>>
-    CommonBinaryEditor<HostOS::kMacOS>::parse_bin(
-        const std::string name) noexcept {
-        auto bin = LIEF::MachO::Parser::parse(name)->take(
-            LIEF::MachO::CPU_TYPES::CPU_TYPE_X86_64);
+    namespace impl {
 
-        return impl::static_unique_ptr_cast<impl::Binary<HostOS::kMacOS>>(
-            std::move(bin));
-    }
+        const std::string CustomBinaryEditor<HostOS::kMacOS>::kSectionPrefix =
+            "__";
 
-    template <>
-    impl::Section<HostOS::kMacOS> *
-    CommonBinaryEditor<HostOS::kMacOS>::get_text_section(
-        impl::Binary<HostOS::kMacOS> &bin) noexcept {
-        auto *section = bin.get_section("__text");
+        std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
+        CustomBinaryEditor<HostOS::kMacOS>::build(
+            const std::string &path) noexcept {
+            auto bin = LIEF::MachO::Parser::parse(path)->take(
+                LIEF::MachO::CPU_TYPES::CPU_TYPE_X86_64);
 
-        return static_cast<impl::Section<HostOS::kMacOS> *>(section);
-    }
-
-    template <>
-    Address CommonBinaryEditor<HostOS::kMacOS>::get_entry_point_va(
-        impl::Binary<HostOS::kMacOS> &bin,
-        impl::Section<HostOS::kMacOS> &text_sect) noexcept {
-        auto &segment_cmd = *text_sect.segment();
-        auto entry_offset = bin.main_command()->entrypoint();
-
-        return entry_offset + segment_cmd.virtual_address();
-    }
-
-    template <>
-    Address
-    CommonBinaryEditor<HostOS::kMacOS>::text_section_ra() const noexcept {
-        auto entry_address = impl::get_entry_point_ra();
-
-        // calculate the pointer which point to the start of the text section
-        auto offset = bin_->main_command()->command_offset();
-        entry_address -= offset;
-
-        return entry_address;
-    }
-
-    template <>
-    std::unique_ptr<impl::Section<HostOS::kMacOS>>
-    CommonBinaryEditor<HostOS::kMacOS>::create_new_section(
-        const std::string &name, const RawCode &content) noexcept {
-        // create the new section with the generated code inside
-        auto section = std::make_unique<LIEF::MachO::Section>(
-            name,
-            LIEF::MachO::Section::content_t{content.begin(), content.end()});
-
-        // say that the new section contains executable code
-        *section += LIEF::MachO::MACHO_SECTION_FLAGS::S_ATTR_SOME_INSTRUCTIONS;
-        *section += LIEF::MachO::MACHO_SECTION_FLAGS::S_ATTR_PURE_INSTRUCTIONS;
-
-        return impl::static_unique_ptr_cast<impl::Section<HostOS::kMacOS>>(
-            std::move(section));
-    }
-
-    template <>
-    Error CommonBinaryEditor<HostOS::kMacOS>::inject_section(
-        const std::string &name, const RawCode &content) noexcept {
-        if (has_section(name)) {
-            return Error::kSectionAlreadyExists;
+            return check_and_init(std::move(bin));
         }
 
-        bin_->add_section(*create_new_section(name, content));
+        std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
+        CustomBinaryEditor<HostOS::kMacOS>::build(
+            const std::vector<std::uint8_t> &raw,
+            const std::string &name) noexcept {
+            auto bin = LIEF::MachO::Parser::parse(raw, name)->take(
+                LIEF::MachO::CPU_TYPES::CPU_TYPE_X86_64);
 
-        return Error::kNone;
-    }
+            return check_and_init(std::move(bin));
+        }
 
-    template <>
-    Address CommonBinaryEditor<HostOS::kMacOS>::replace_entry(
-        Address new_entry) noexcept {
-        auto &segment_cmd = *text_section_->segment();
+        Address CustomBinaryEditor<HostOS::kMacOS>::first_execution_va()
+            const noexcept {
+            if (this->has_global_init()) {
+                return this->first_global_init();
+            } else {
+                return this->bin_->entrypoint();
+            }
+        }
 
-        bin_->main_command()->entrypoint(new_entry -
-                                         segment_cmd.virtual_address());
+        Address
+        CustomBinaryEditor<HostOS::kMacOS>::exec_first(Address va) noexcept {
+            auto old = this->first_execution_va();
 
-        auto old_entry_point = entry_point_va_;
-        entry_point_va_ = get_entry_point_va(*bin_, *text_section_);
+            if (this->has_global_init()) {
+                this->first_global_init(va);
+            } else {
+                auto &segment_cmd = *this->text_section_.segment();
+                this->bin_->main_command()->entrypoint(
+                    va - segment_cmd.virtual_address());
+            }
 
-        return old_entry_point;
-    }
+            return old;
+        }
+
+        Error CustomBinaryEditor<HostOS::kMacOS>::inject_section(
+            const std::string &name, const RawCode &content) noexcept {
+            if (this->has_section_impl(name)) {
+                return Error::kSectionAlreadyExists;
+            }
+
+            // create the new section with the generated code inside
+            LIEF::MachO::Section section(kSectionPrefix + name,
+                                         {content.begin(), content.end()});
+
+            // say that the new section contains executable code
+            section +=
+                LIEF::MachO::MACHO_SECTION_FLAGS::S_ATTR_SOME_INSTRUCTIONS;
+            section +=
+                LIEF::MachO::MACHO_SECTION_FLAGS::S_ATTR_PURE_INSTRUCTIONS;
+
+            this->bin_->add_section(section);
+
+            return Error::kNone;
+        }
+
+        CustomBinaryEditor<HostOS::kMacOS>::CustomBinaryEditor(
+            std::unique_ptr<LIEF::MachO::Binary> &&bin,
+            LIEF::MachO::Section &text_section) noexcept
+            : bin_{std::move(bin)}, text_section_{text_section} {}
+
+        std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
+        CustomBinaryEditor<HostOS::kMacOS>::check_and_init(
+            std::unique_ptr<LIEF::MachO::Binary> &&bin) {
+            if (bin == nullptr || bin->header().abstract_object_type() !=
+                                      LIEF::OBJECT_TYPES::TYPE_EXECUTABLE) {
+                return nullptr;
+            }
+
+            auto *text_sect = bin->get_section(kSectionPrefix + "text");
+
+            if (text_sect == nullptr) {
+                return nullptr;
+            }
+
+            std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
+                editor(new CustomBinaryEditor<HostOS::kMacOS>(std::move(bin),
+                                                              *text_sect));
+
+            return editor;
+        }
+
+        bool
+        CustomBinaryEditor<HostOS::kMacOS>::has_global_init() const noexcept {
+            return this->has_section_impl("mod_init_func") &&
+                   this->get_section_impl("mod_init_func")->size() > 0;
+        }
+
+        Address
+        CustomBinaryEditor<HostOS::kMacOS>::first_global_init() const noexcept {
+            if (!this->has_global_init()) {
+                return 0;
+            }
+
+            Address result = *reinterpret_cast<Address *>(
+                this->get_section_content("mod_init_func").data());
+
+            return result;
+        }
+
+        Error CustomBinaryEditor<HostOS::kMacOS>::first_global_init(
+            Address va) noexcept {
+            if (!this->has_global_init()) {
+                return Error::kSectionNotFound;
+            }
+
+            auto *global_init_sect = this->get_section_impl("mod_init_func");
+
+            bin_->patch_address(global_init_sect->virtual_address(), va,
+                                kByteWordSize, LIEF::Binary::VA_TYPES::VA);
+
+            return Error::kNone;
+        }
+
+    } // namespace impl
 
 } // namespace poly

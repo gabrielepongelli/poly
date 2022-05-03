@@ -10,6 +10,7 @@ set(ASMJIT asmjit)
 set(ASMJIT_URL "https://github.com/asmjit/asmjit.git")
 set(ASMJIT_VERSION 9a92d2f97260749f6f29dc93e53c743448f0137a)
 
+
 FetchContent_Declare(${ASMJIT}
     GIT_REPOSITORY ${ASMJIT_URL}
     GIT_TAG ${ASMJIT_VERSION}
@@ -24,7 +25,7 @@ set(ASMJIT_STATIC ON CACHE INTERNAL "Build the library statically")
 # -------------------------------------------
 set(LIEF LIEF)
 set(LIEF_URL "https://github.com/lief-project/LIEF.git")
-set(LIEF_VERSION 4a58cc18fd32dd00b1fc8d426dc6affd2df3f398)
+set(LIEF_VERSION c7b3ce3b2ce6917855a72709f73ef6d00b50e1f7)
 
 
 FetchContent_Declare(${LIEF}

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -10,89 +11,129 @@
 
 #include "engine/binary_editor.hpp"
 #include "engine/enums.hpp"
+#include "engine/host_properties.hpp"
 #include "engine/utils.hpp"
 
 namespace poly {
 
-    template <>
-    std::unique_ptr<impl::Binary<HostOS::kLinux>>
-    CommonBinaryEditor<HostOS::kLinux>::parse_bin(
-        const std::string name) noexcept {
-        auto bin = LIEF::ELF::Parser::parse(name);
+    namespace impl {
 
-        return impl::static_unique_ptr_cast<impl::Binary<HostOS::kLinux>>(
-            std::move(bin));
-    }
+        const std::string CustomBinaryEditor<HostOS::kLinux>::kSectionPrefix =
+            ".";
 
-    template <>
-    impl::Section<HostOS::kLinux> *
-    CommonBinaryEditor<HostOS::kLinux>::get_text_section(
-        impl::Binary<HostOS::kLinux> &bin) noexcept {
-        auto *section = bin.text_section();
+        std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kLinux>>>
+        CustomBinaryEditor<HostOS::kLinux>::build(
+            const std::string &path) noexcept {
+            auto bin = LIEF::ELF::Parser::parse(path);
 
-        return static_cast<impl::Section<HostOS::kLinux> *>(section);
-    }
-
-    template <>
-    Address CommonBinaryEditor<HostOS::kLinux>::get_entry_point_va(
-        impl::Binary<HostOS::kLinux> &bin,
-        impl::Section<HostOS::kLinux> &) noexcept {
-        auto &text_segment =
-            *bin.segment_from_virtual_address(bin.entrypoint());
-        auto entry = bin.entrypoint() + text_segment.virtual_address();
-
-        return entry;
-    }
-
-    template <>
-    Address
-    CommonBinaryEditor<HostOS::kLinux>::text_section_ra() const noexcept {
-        auto entry_address = impl::get_entry_point_ra();
-
-        entry_address -=
-            bin_->entrypoint() -
-            bin_->section_from_offset(bin_->entrypoint())->virtual_address();
-
-        return entry_address;
-    }
-
-    template <>
-    std::unique_ptr<impl::Section<HostOS::kLinux>>
-    CommonBinaryEditor<HostOS::kLinux>::create_new_section(
-        const std::string &name, const RawCode &content) noexcept {
-        auto section = std::make_unique<LIEF::ELF::Section>(name);
-
-        // say that the new section contains executable code
-        *section += LIEF::ELF::ELF_SECTION_FLAGS::SHF_ALLOC;
-        *section += LIEF::ELF::ELF_SECTION_FLAGS::SHF_EXECINSTR;
-
-        section->content(std::vector<uint8_t>{content.begin(), content.end()});
-
-        return impl::static_unique_ptr_cast<impl::Section<HostOS::kLinux>>(
-            std::move(section));
-    }
-
-    template <>
-    Error CommonBinaryEditor<HostOS::kLinux>::inject_section(
-        const std::string &name, const RawCode &content) noexcept {
-        if (has_section(name)) {
-            return Error::kSectionAlreadyExists;
+            return check_and_init(std::move(bin));
         }
 
-        bin_->add(*create_new_section(name, content));
+        std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kLinux>>>
+        CustomBinaryEditor<HostOS::kLinux>::build(
+            const std::vector<std::uint8_t> &raw,
+            const std::string &name) noexcept {
+            auto bin = LIEF::ELF::Parser::parse(raw, name);
 
-        return Error::kNone;
-    }
+            return check_and_init(std::move(bin));
+        }
 
-    template <>
-    Address CommonBinaryEditor<HostOS::kLinux>::replace_entry(
-        Address new_entry) noexcept {
-        bin_->header().entrypoint(new_entry);
+        Address
+        CustomBinaryEditor<HostOS::kLinux>::exec_first(Address va) noexcept {
+            auto old = this->first_execution_va();
 
-        auto old_entry_point = entry_point_va_;
-        entry_point_va_ = get_entry_point_va(*bin_, *text_section_);
+            this->bin_->header().entrypoint(va);
 
-        return old_entry_point;
-    }
+            return old;
+        }
+
+        Error CustomBinaryEditor<HostOS::kLinux>::inject_section(
+            const std::string &name, const RawCode &content) noexcept {
+            if (this->has_section_impl(name)) {
+                return Error::kSectionAlreadyExists;
+            }
+
+            LIEF::ELF::Section section(kSectionPrefix + name);
+
+            // say that the new section contains executable code
+            section += LIEF::ELF::ELF_SECTION_FLAGS::SHF_ALLOC;
+            section += LIEF::ELF::ELF_SECTION_FLAGS::SHF_EXECINSTR;
+
+            if (content.size() > 0) {
+                section.content({content.begin(), content.end()});
+            } else {
+                // put at least 1 byte in the section content otherwise the
+                // method Binary::segment_from_virtual_address would not work
+                section.content({0});
+            }
+
+            this->bin_->add(section, true);
+
+            return Error::kNone;
+        }
+
+        Error CustomBinaryEditor<HostOS::kLinux>::update_content(
+            const std::string &name, const RawCode &content) noexcept {
+            if (!this->has_section_impl(name)) {
+                return Error::kSectionNotFound;
+            }
+
+            LIEF::ELF::Section *section = this->get_section_impl(name);
+            LIEF::ELF::Segment *segment = nullptr;
+            if (section->segments().empty() &&
+                (segment = this->bin_->segment_from_virtual_address(
+                     section->virtual_address())) != nullptr &&
+                section->virtual_address() != 0) {
+                // it is an injected section that has to be loaded
+                // for newly created sections in order to modify their contet,
+                // they must be removed and re-added to the binary
+                LIEF::ELF::Section new_sect{*section};
+
+                // also its segment must be deleted since a new one will be
+                // created when the section will be re-added and the old one
+                // will be unused
+                this->bin_->remove(*segment);
+                this->bin_->remove(*section);
+                new_sect.content({content.begin(), content.end()});
+                this->bin_->add(new_sect);
+            } else {
+                // it is an existing section or a new section that must not be
+                // loaded
+                section->content({content.begin(), content.end()});
+            }
+
+            return Error::kNone;
+        }
+
+        CustomBinaryEditor<HostOS::kLinux>::CustomBinaryEditor(
+            std::unique_ptr<LIEF::ELF::Binary> &&bin,
+            LIEF::ELF::Section &text_section) noexcept
+            : bin_{std::move(bin)}, text_section_{text_section} {}
+
+        std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kLinux>>>
+        CustomBinaryEditor<HostOS::kLinux>::check_and_init(
+            std::unique_ptr<LIEF::ELF::Binary> &&bin) {
+            auto type = bin->header().abstract_object_type();
+            if (bin == nullptr ||
+                (type != LIEF::OBJECT_TYPES::TYPE_EXECUTABLE &&
+                 (type != LIEF::OBJECT_TYPES::TYPE_LIBRARY ||
+                  bin->entrypoint() == 0))) {
+                return nullptr;
+            }
+
+            auto *text_sect = bin->text_section();
+
+            if (text_sect == nullptr) {
+                return nullptr;
+            }
+
+            std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kLinux>>>
+                editor(new CustomBinaryEditor<HostOS::kLinux>(std::move(bin),
+                                                              *text_sect));
+
+            return editor;
+        }
+
+    } // namespace impl
 
 } // namespace poly

@@ -156,7 +156,7 @@ namespace poly {
         template <class Enc>
         struct CipherImpl<CipherMode::kCBC, Enc> {
             template <std::uint8_t size>
-            static Error encrypt(RawCode &data,
+            static Error encrypt(RawCode &src, RawCode &dst,
                                  const EncryptionSecret<size> &secret) noexcept;
 
             template <std::uint8_t size = 8>
@@ -203,11 +203,31 @@ namespace poly {
     struct Cipher {
 
         /**
+         * Encrypt the specified data with the specified encryption secret. If
+         * src and dst haven't the same size, the min of those sizes will be
+         * considered.
+         * @param src data to encrypt. If its size is not a multiple of the
+         * non-type template parameter size, the length used by this method is
+         * data.size() - (data.size() % size) and an error will be returned to
+         * report this behaviour.
+         * @param dst structure where to save the encrypted data. If its size is
+         * not a multiple of the non-type template parameter size, the length
+         * used by this method is data.size() - (data.size() % size) and an
+         * error will be returned to report this behaviour.
+         * @param secret encryption secret to use.
+         * @returns kNone if no error has occurred.
+         */
+        template <std::uint8_t size = kByteWordSize>
+        static Error encrypt(RawCode &src, RawCode &dst,
+                             const EncryptionSecret<size> &secret) noexcept;
+
+        /**
          * Encrypt the specified data with the specified encryption secret. The
          * procedure will overwrite the plain data with the encrypted ones.
          * @param data data to encrypt. If its size is not a multiple of the
-         * non-type template parameter size, nothing will be modified and an
-         * error will be returned.
+         * non-type template parameter size, the length used by this method is
+         * data.size() - (data.size() % size) and an error will be returned to
+         * report this behaviour.
          * @param secret encryption secret to use.
          * @returns kNone if no error has occurred.
          */
@@ -226,8 +246,9 @@ namespace poly {
          * register will contain the memory address of the first byte after the
          * encrypted data.
          * @param data_len number of bytes of the data to encrypt. If its value
-         * is not a multiple of the non-type template parameter size, nothing
-         * will be modified and an error will be returned.
+         * is not a multiple of the non-type template parameter size, the length
+         * used by this method is data_len - (data_len % size) and an error will
+         * be returned to report this behaviour.
          * @param exit_label label that indicates the exit of the assembled
          * procedure. When the assembled assembly code will be executed, it will
          * jump to this label at the end of the decryption.
