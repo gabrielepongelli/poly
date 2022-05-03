@@ -44,7 +44,7 @@ namespace poly {
         CustomBinaryEditor<HostOS::kWindows>::build(
             const std::vector<std::uint8_t> &raw,
             const std::string &name) noexcept {
-            auto bin = LIEF::PE::Parser::parse(path);
+            auto bin = LIEF::PE::Parser::parse(raw, name);
 
             return check_and_init(std::move(bin));
         }
