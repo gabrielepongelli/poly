@@ -82,6 +82,9 @@ namespace poly {
             LIEF::PE::Section section({content.begin(), content.end()},
                                       kSectionPrefix + name);
 
+            section.virtual_size(content.size());
+            section.size(content.size());
+
             // say that the new section is executable and readable
             section.add_characteristic(
                 LIEF::PE::SECTION_CHARACTERISTICS::IMAGE_SCN_MEM_EXECUTE);
@@ -91,6 +94,23 @@ namespace poly {
                 LIEF::PE::SECTION_CHARACTERISTICS::IMAGE_SCN_CNT_CODE);
 
             this->bin_->add_section(section, LIEF::PE::PE_SECTION_TYPES::TEXT);
+
+            return Error::kNone;
+        }
+
+        Error CustomBinaryEditor<HostOS::kWindows>::update_content(
+            const std::string &name, const RawCode &content) noexcept {
+            if (!ProtectedAccessor::has_section(*this->real(), name))
+                return Error::kSectionNotFound;
+
+            auto *section = ProtectedAccessor::get_section(*this->real(), name);
+
+            // must be done, otherwise with g++ the size will not be really
+            // updated
+            section->virtual_size(content.size());
+
+            section->size(content.size());
+            section->content({content.begin(), content.end()});
 
             return Error::kNone;
         }

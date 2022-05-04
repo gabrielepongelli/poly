@@ -65,6 +65,9 @@ namespace poly {
             Error inject_section(const std::string &name,
                                  const RawCode &content) noexcept;
 
+            Error update_content(const std::string &name,
+                                 const RawCode &content) noexcept;
+
             void save_changes(const std::string &path) noexcept;
 
             static constexpr Address kPageSize = 4096;
