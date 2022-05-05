@@ -4,7 +4,6 @@ add_executable(tests
     main.cpp
     unit_tests/binary_editor.cpp
     unit_tests/encryption.cpp
-    integration_tests/engine.cpp
 )
 
 # Required by Boost Filesystem in order to use only not-deprecated functions
