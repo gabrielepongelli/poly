@@ -92,12 +92,49 @@ FetchContent_Declare(Catch2
     UPDATE_DISCONNECTED ON
 )
 
-FetchContent_MakeAvailable(${ASMJIT} ${LIEF} ${CATCH2})
+
+# -------------------------------------------
+#                 Boost FileSystem
+# -------------------------------------------
+find_package(Boost 1.79 COMPONENTS filesystem)
+
+if(Boost_FOUND)
+    set(BOOST)
+    set(Boost_USE_STATIC_LIBS ON)
+    include_directories(${Boost_INCLUDE_DIRS})
+else()
+    set(BOOST Boost)
+    set(BOOST_URL "https://github.com/boostorg/boost.git")
+    set(BOOST_VERSION 5df8086b733798c8e08e316626a16babe11bd0d2)
+    set(BOOST_SUBMODULES libs/align libs/assert libs/atomic libs/concept_check
+        libs/config libs/container_hash libs/conversion libs/core libs/detail
+        libs/filesystem libs/function_types libs/fusion libs/integer libs/io 
+        libs/iterator libs/move libs/mp11 libs/mpl libs/optional libs/predef
+        libs/preprocessor libs/smart_ptr libs/static_assert libs/system 
+        libs/throw_exception libs/tuple libs/typeof libs/type_traits 
+        libs/utility libs/variant2 libs/winapi tools/cmake
+    )
+
+
+    FetchContent_Declare(${BOOST}
+        GIT_REPOSITORY ${BOOST_URL}
+        GIT_TAG ${BOOST_VERSION}
+        GIT_SUBMODULES ${BOOST_SUBMODULES}
+        UPDATE_DISCONNECTED ON
+    )
+
+
+    set(Boost_USE_STATIC_LIBS ON CACHE BOOL "Build the library statically")
+endif()
+
+
+FetchContent_MakeAvailable(${ASMJIT} ${LIEF} ${CATCH2} ${BOOST})
 
 # Target libraries to link
 set(LIB_LIEF    LIB_LIEF)
 set(LIB_ASMJIT  asmjit)
 set(LIB_CATCH2  Catch2)
+set(LIB_BOOST_FS    Boost::filesystem)
 
 # Add the catch modules' path to the global path
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)

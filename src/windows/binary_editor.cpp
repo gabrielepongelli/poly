@@ -65,8 +65,7 @@ namespace poly {
             if (this->has_tls()) {
                 this->first_tls_callback(va);
             } else {
-                this->bin_->optional_header().addressof_entrypoint(
-                    va + this->bin_->imagebase());
+                this->bin_->optional_header().addressof_entrypoint(va);
             }
 
             return old;
@@ -81,9 +80,6 @@ namespace poly {
             // create the new section with the generated code inside
             LIEF::PE::Section section({content.begin(), content.end()},
                                       kSectionPrefix + name);
-
-            section.virtual_size(content.size());
-            section.size(content.size());
 
             // say that the new section is executable and readable
             section.add_characteristic(

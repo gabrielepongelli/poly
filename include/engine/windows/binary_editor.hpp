@@ -39,6 +39,15 @@ namespace poly {
             build(const std::vector<std::uint8_t> &raw,
                   const std::string &name) noexcept;
 
+            static inline std::unique_ptr<
+                BinaryEditor<CustomBinaryEditor<HostOS::kWindows>>>
+            build(std::istream &src, std::size_t size,
+                  const std::string &name) noexcept {
+                return CommonBinaryEditor<
+                    CustomBinaryEditor<HostOS::kWindows>>::build(src, size,
+                                                                 name);
+            }
+
             /**
              * Retrieve the virtual address of the specified imported function.
              * @param import_name name of the import library where to search for

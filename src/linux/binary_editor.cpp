@@ -113,11 +113,14 @@ namespace poly {
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kLinux>>>
         CustomBinaryEditor<HostOS::kLinux>::check_and_init(
             std::unique_ptr<LIEF::ELF::Binary> &&bin) {
+            if (bin == nullptr) {
+                return nullptr;
+            }
+
             auto type = bin->header().abstract_object_type();
-            if (bin == nullptr ||
-                (type != LIEF::OBJECT_TYPES::TYPE_EXECUTABLE &&
-                 (type != LIEF::OBJECT_TYPES::TYPE_LIBRARY ||
-                  bin->entrypoint() == 0))) {
+            if (type != LIEF::OBJECT_TYPES::TYPE_EXECUTABLE &&
+                (type != LIEF::OBJECT_TYPES::TYPE_LIBRARY ||
+                 bin->entrypoint() == 0)) {
                 return nullptr;
             }
 

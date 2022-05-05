@@ -39,6 +39,14 @@ namespace poly {
             build(const std::vector<std::uint8_t> &raw,
                   const std::string &name) noexcept;
 
+            static inline std::unique_ptr<
+                BinaryEditor<CustomBinaryEditor<HostOS::kLinux>>>
+            build(std::istream &src, std::size_t size,
+                  const std::string &name) noexcept {
+                return CommonBinaryEditor<
+                    CustomBinaryEditor<HostOS::kLinux>>::build(src, size, name);
+            }
+
             inline Address first_execution_va() const noexcept {
                 return this->bin_->entrypoint();
             }

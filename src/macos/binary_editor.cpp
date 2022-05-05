@@ -24,10 +24,14 @@ namespace poly {
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
         CustomBinaryEditor<HostOS::kMacOS>::build(
             const std::string &path) noexcept {
-            auto bin = LIEF::MachO::Parser::parse(path)->take(
-                LIEF::MachO::CPU_TYPES::CPU_TYPE_X86_64);
+            auto fat_bin = LIEF::MachO::Parser::parse(path);
 
-            return check_and_init(std::move(bin));
+            if (fat_bin == nullptr) {
+                return nullptr;
+            }
+
+            return check_and_init(
+                fat_bin->take(LIEF::MachO::CPU_TYPES::CPU_TYPE_X86_64));
         }
 
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
