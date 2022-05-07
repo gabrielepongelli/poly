@@ -4,10 +4,10 @@
 
 #include <asmjit/asmjit.h>
 
-#include "engine/engine.hpp"
-#include "engine/enums.hpp"
-#include "engine/utils.hpp"
-#include "engine/windows/engine.hpp"
+#include "poly/engine.hpp"
+#include "poly/enums.hpp"
+#include "poly/utils.hpp"
+#include "poly/windows/engine.hpp"
 
 namespace poly {
 

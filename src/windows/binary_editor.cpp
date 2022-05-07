@@ -1,4 +1,4 @@
-#include "engine/windows/binary_editor.hpp"
+#include "poly/windows/binary_editor.hpp"
 
 #include <cstdint>
 
@@ -9,10 +9,10 @@
 
 #include <LIEF/LIEF.hpp>
 
-#include "engine/binary_editor.hpp"
-#include "engine/enums.hpp"
-#include "engine/host_properties.hpp"
-#include "engine/utils.hpp"
+#include "poly/binary_editor.hpp"
+#include "poly/enums.hpp"
+#include "poly/host_properties.hpp"
+#include "poly/utils.hpp"
 
 // Needed to avoid some clash between enums and symbols defined in Windows.h,
 // which is used by some of the imports

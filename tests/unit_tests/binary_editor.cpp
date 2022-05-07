@@ -11,8 +11,8 @@
 #include <boost/filesystem.hpp>
 #include <catch2/catch.hpp>
 
-#include <engine/binary_editor.hpp>
-#include <engine/host_properties.hpp>
+#include <poly/binary_editor.hpp>
+#include <poly/host_properties.hpp>
 
 #if defined(POLY_MACOS)
 poly::RawCode generate_code(poly::OsBinaryEditor &, int return_code,

@@ -14,7 +14,7 @@ target_compile_definitions(tests PUBLIC ASMJIT_STATIC)
 
 target_link_libraries(tests
     PRIVATE
-    engine
+    poly
     ${LIB_CATCH2}
     ${LIB_LIEF}
     ${LIB_BOOST_FS}
@@ -31,7 +31,7 @@ add_executable(engine_test
 
 target_link_libraries(engine_test
     PRIVATE
-    engine
+    poly
     ${LIB_CATCH2}
 )
 

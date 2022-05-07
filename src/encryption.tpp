@@ -7,10 +7,10 @@
 
 #include <asmjit/asmjit.h>
 
-#include "engine/encryption.hpp"
-#include "engine/enums.hpp"
-#include "engine/host_properties.hpp"
-#include "engine/utils.hpp"
+#include "poly/encryption.hpp"
+#include "poly/enums.hpp"
+#include "poly/host_properties.hpp"
+#include "poly/utils.hpp"
 
 namespace poly {
 

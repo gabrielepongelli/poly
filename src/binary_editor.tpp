@@ -9,17 +9,17 @@
 
 #include <LIEF/LIEF.hpp>
 
-#include "engine/binary_editor.hpp"
-#include "engine/enums.hpp"
-#include "engine/host_properties.hpp"
-#include "engine/utils.hpp"
+#include "poly/binary_editor.hpp"
+#include "poly/enums.hpp"
+#include "poly/host_properties.hpp"
+#include "poly/utils.hpp"
 
 #if defined(POLY_LINUX)
-#include "engine/linux/binary_editor.hpp"
+#include "poly/linux/binary_editor.hpp"
 #elif defined(POLY_MACOS)
-#include "engine/macos/binary_editor.hpp"
+#include "poly/macos/binary_editor.hpp"
 #elif defined(POLY_WINDOWS)
-#include "engine/windows/binary_editor.hpp"
+#include "poly/windows/binary_editor.hpp"
 #endif
 
 namespace poly {

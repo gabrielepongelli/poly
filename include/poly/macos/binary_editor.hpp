@@ -8,10 +8,10 @@
 
 #include <LIEF/LIEF.hpp>
 
-#include "engine/binary_editor.hpp"
-#include "engine/enums.hpp"
-#include "engine/host_properties.hpp"
-#include "engine/utils.hpp"
+#include "poly/binary_editor.hpp"
+#include "poly/enums.hpp"
+#include "poly/host_properties.hpp"
+#include "poly/utils.hpp"
 
 namespace poly {
 

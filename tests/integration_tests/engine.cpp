@@ -9,7 +9,7 @@
 #include <LIEF/LIEF.hpp>
 #include <boost/filesystem.hpp>
 
-#include <engine/engine.hpp>
+#include <poly/engine.hpp>
 
 TEST_CASE("Code encryption on the fly", "[integration][engine]") {
     const std::string hello_world_bin =

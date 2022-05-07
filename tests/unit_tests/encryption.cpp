@@ -4,8 +4,8 @@
 
 #include <asmjit/asmjit.h>
 
-#include <engine/encryption.hpp>
-#include <engine/host_properties.hpp>
+#include <poly/encryption.hpp>
+#include <poly/host_properties.hpp>
 
 using Rand64BitGen =
     Catch::Generators::RandomIntegerGenerator<unsigned long long>;

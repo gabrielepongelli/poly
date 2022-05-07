@@ -6,7 +6,7 @@
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
 
-#include <engine/engine.hpp>
+#include <poly/engine.hpp>
 
 using Rand64BitGen =
     Catch::Generators::RandomIntegerGenerator<unsigned long long>;

@@ -60,28 +60,28 @@ if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Windows")
 endif()
 
 # Append the include dir to all include files
-list(TRANSFORM HEADER_LIST PREPEND "${Poly_SOURCE_DIR}/include/engine/")
+list(TRANSFORM HEADER_LIST PREPEND "${Poly_SOURCE_DIR}/include/poly/")
 
-add_library(engine STATIC ${HEADER_LIST} ${SOURCE_LIST})
+add_library(poly STATIC ${HEADER_LIST} ${SOURCE_LIST})
 
 # Required by AsmJIT to link itself statically in the correct way
-target_compile_definitions(engine PUBLIC ASMJIT_STATIC)
+target_compile_definitions(poly PUBLIC ASMJIT_STATIC)
 
 if(MSVC)
     # Needed by LIEF for the 'and', 'or' ... keywords
-    target_compile_options(engine PUBLIC /FIiso646.h)
+    target_compile_options(poly PUBLIC /FIiso646.h)
 
     # Needed by LIEF to use his version of msvcrt.lib
-    target_link_options(engine PUBLIC /NODEFAULTLIB:MSVCRT)
+    target_link_options(poly PUBLIC /NODEFAULTLIB:MSVCRT)
 endif()
 
-target_include_directories(engine
+target_include_directories(poly
     PUBLIC
     "${CMAKE_SOURCE_DIR}/include"
     "${CMAKE_SOURCE_DIR}/src"
 )
 
-target_link_libraries(engine
+target_link_libraries(poly
     PUBLIC
     ${LIB_ASMJIT}
     ${LIB_LIEF}
