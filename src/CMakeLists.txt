@@ -8,7 +8,7 @@ set(HEADER_LIST
 )
 
 set(SOURCE_LIST
-    engine.cpp
+    engine.tpp
     binary_editor.tpp
     utils.cpp
     utils.tpp
@@ -19,10 +19,12 @@ if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
     list(APPEND SOURCE_LIST
         macos/binary_editor.cpp
         macos/get_entry_point_ra.S
+        macos/engine.tpp
     )
 
     list(APPEND HEADER_LIST
         macos/binary_editor.hpp
+        macos/engine.hpp
     )
 endif()
 
@@ -30,16 +32,19 @@ if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux")
     list(APPEND SOURCE_LIST
         linux/binary_editor.cpp
         linux/get_entry_point_ra.S
+        linux/engine.tpp
     )
 
     list(APPEND HEADER_LIST
         linux/binary_editor.hpp
+        linux/engine.hpp
     )
 endif()
 
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Windows")
     list(APPEND SOURCE_LIST
         windows/binary_editor.cpp
+        windows/engine.tpp
     )
 
     if (MSVC)
@@ -50,6 +55,7 @@ if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Windows")
     
     list(APPEND HEADER_LIST
         windows/binary_editor.hpp
+        windows/engine.hpp
     )
 endif()
 

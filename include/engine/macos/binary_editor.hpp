@@ -56,6 +56,28 @@ namespace poly {
             Error inject_section(const std::string &name,
                                  const RawCode &content) noexcept;
 
+            /**
+             * Get the max permissions that can be setted for executable code.
+             * @return a value which contains the combination of permissions.
+             * The values associated are:
+             * - read: 0x4
+             * - write: 0x2
+             * - exec: 0x1
+             */
+            inline std::uint8_t code_max_permissions() const noexcept {
+                return static_cast<std::uint8_t>(
+                    this->text_section_.segment()->max_protection());
+            }
+
+            /**
+             * Change the max permissions that can be setted for executable
+             * code.
+             * @param perms new permissions to set. If the passed parameter uses
+             * other bits besides the first 3, their value will be ignored.
+             * @return the old permissions.
+             */
+            std::uint8_t code_max_permissions(std::uint8_t perms) noexcept;
+
             static constexpr Address kPageSize = 4096;
 
           protected:

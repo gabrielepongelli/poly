@@ -89,6 +89,15 @@ namespace poly {
             return Error::kNone;
         }
 
+        std::uint8_t CustomBinaryEditor<HostOS::kMacOS>::code_max_permissions(
+            std::uint8_t perms) noexcept {
+            auto old = this->code_max_permissions();
+
+            this->text_section_.segment()->max_protection(perms & 0x7);
+
+            return old;
+        }
+
         CustomBinaryEditor<HostOS::kMacOS>::CustomBinaryEditor(
             std::unique_ptr<LIEF::MachO::Binary> &&bin,
             LIEF::MachO::Section &text_section) noexcept
