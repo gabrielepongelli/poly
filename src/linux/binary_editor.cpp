@@ -18,7 +18,7 @@ namespace poly {
 
     namespace impl {
 
-        const std::string CustomBinaryEditor<HostOS::kLinux>::kSectionPrefix =
+        const std::string CustomBinaryEditor<HostOS::kLinux>::kSectionPrefix_ =
             ".";
 
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kLinux>>>
@@ -53,7 +53,7 @@ namespace poly {
                 return Error::kSectionAlreadyExists;
             }
 
-            LIEF::ELF::Section section(kSectionPrefix + name);
+            LIEF::ELF::Section section(kSectionPrefix_ + name);
 
             // say that the new section contains executable code
             section += LIEF::ELF::ELF_SECTION_FLAGS::SHF_ALLOC;

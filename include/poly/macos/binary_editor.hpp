@@ -78,27 +78,25 @@ namespace poly {
              */
             std::uint8_t code_max_permissions(std::uint8_t perms) noexcept;
 
-            static constexpr Address kPageSize = 4096;
-
           protected:
             CustomBinaryEditor(std::unique_ptr<LIEF::MachO::Binary> &&bin,
                                LIEF::MachO::Section &text_section) noexcept;
 
             inline bool
             has_section_impl(const std::string &name) const noexcept {
-                return this->bin_->get_section(kSectionPrefix + name) !=
+                return this->bin_->get_section(kSectionPrefix_ + name) !=
                        nullptr;
             }
 
             inline Section<HostOS::kMacOS> *
             get_section_impl(const std::string &name) noexcept {
                 return static_cast<Section<HostOS::kMacOS> *>(
-                    this->bin_->get_section(kSectionPrefix + name));
+                    this->bin_->get_section(kSectionPrefix_ + name));
             }
             inline const Section<HostOS::kMacOS> *
             get_section_impl(const std::string &name) const noexcept {
                 return static_cast<Section<HostOS::kMacOS> *>(
-                    this->bin_->get_section(kSectionPrefix + name));
+                    this->bin_->get_section(kSectionPrefix_ + name));
             }
 
             inline Section<HostOS::kMacOS> &get_text_section_impl() noexcept {
@@ -121,6 +119,9 @@ namespace poly {
             inline Address get_entry_point_ra_impl() const noexcept {
                 return impl::get_entry_point_ra();
             }
+
+            static constexpr Address kPageSize_ = 4096;
+            static const std::string kSectionPrefix_;
 
           private:
             /**
@@ -152,7 +153,6 @@ namespace poly {
              */
             Error first_global_init(Address va) noexcept;
 
-            static const std::string kSectionPrefix;
             std::unique_ptr<LIEF::MachO::Binary> bin_;
             LIEF::MachO::Section &text_section_;
         };

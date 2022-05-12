@@ -79,27 +79,25 @@ namespace poly {
 
             void save_changes(const std::string &path) noexcept;
 
-            static constexpr Address kPageSize = 4096;
-
           protected:
             CustomBinaryEditor(std::unique_ptr<LIEF::PE::Binary> &&bin,
                                LIEF::PE::Section &text_section) noexcept;
 
             inline bool
             has_section_impl(const std::string &name) const noexcept {
-                return this->bin_->get_section(kSectionPrefix + name) !=
+                return this->bin_->get_section(kSectionPrefix_ + name) !=
                        nullptr;
             }
 
             inline Section<HostOS::kWindows> *
             get_section_impl(const std::string &name) noexcept {
                 return static_cast<Section<HostOS::kWindows> *>(
-                    this->bin_->get_section(kSectionPrefix + name));
+                    this->bin_->get_section(kSectionPrefix_ + name));
             }
             inline const Section<HostOS::kWindows> *
             get_section_impl(const std::string &name) const noexcept {
                 return static_cast<Section<HostOS::kWindows> *>(
-                    this->bin_->get_section(kSectionPrefix + name));
+                    this->bin_->get_section(kSectionPrefix_ + name));
             }
 
             inline Section<HostOS::kWindows> &get_text_section_impl() noexcept {
@@ -123,6 +121,9 @@ namespace poly {
             inline Address get_entry_point_ra_impl() const noexcept {
                 return impl::get_entry_point_ra();
             }
+
+            static constexpr Address kPageSize_ = 4096;
+            static const std::string kSectionPrefix_;
 
           private:
             /**
@@ -154,7 +155,6 @@ namespace poly {
              */
             Error first_tls_callback(Address va) noexcept;
 
-            static const std::string kSectionPrefix;
             std::unique_ptr<LIEF::PE::Binary> bin_;
             LIEF::PE::Section &text_section_;
         };

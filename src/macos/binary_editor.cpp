@@ -18,7 +18,7 @@ namespace poly {
 
     namespace impl {
 
-        const std::string CustomBinaryEditor<HostOS::kMacOS>::kSectionPrefix =
+        const std::string CustomBinaryEditor<HostOS::kMacOS>::kSectionPrefix_ =
             "__";
 
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
@@ -75,7 +75,7 @@ namespace poly {
             }
 
             // create the new section with the generated code inside
-            LIEF::MachO::Section section(kSectionPrefix + name,
+            LIEF::MachO::Section section(kSectionPrefix_ + name,
                                          {content.begin(), content.end()});
 
             // say that the new section contains executable code
@@ -111,7 +111,7 @@ namespace poly {
                 return nullptr;
             }
 
-            auto *text_sect = bin->get_section(kSectionPrefix + "text");
+            auto *text_sect = bin->get_section(kSectionPrefix_ + "text");
 
             if (text_sect == nullptr) {
                 return nullptr;

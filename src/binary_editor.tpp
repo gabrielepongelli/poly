@@ -47,7 +47,7 @@ namespace poly {
         Address CommonBinaryEditor<Real>::align_to_page_size(
             Address addr, std::size_t &len) noexcept {
             Address end = len + addr;
-            Address start = addr & ~(Real::kPageSize - 1);
+            Address start = addr & ~(ProtectedAccessor::kPageSize - 1);
 
             len = end - start;
 
@@ -92,7 +92,9 @@ namespace poly {
         inline Error CommonBinaryEditor<Real>::update_text_section_content(
             const RawCode &content) noexcept {
             return this->real()->update_content(
-                ProtectedAccessor::get_text_section(*this->real()).name(),
+                ProtectedAccessor::get_text_section(*this->real())
+                    .name()
+                    .substr(ProtectedAccessor::kSectionPrefix.size()),
                 content);
         }
 

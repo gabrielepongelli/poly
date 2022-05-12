@@ -59,27 +59,25 @@ namespace poly {
             Error update_content(const std::string &name,
                                  const RawCode &content) noexcept;
 
-            static constexpr Address kPageSize = 4096;
-
           protected:
             CustomBinaryEditor(std::unique_ptr<LIEF::ELF::Binary> &&bin,
                                LIEF::ELF::Section &text_section) noexcept;
 
             inline bool
             has_section_impl(const std::string &name) const noexcept {
-                return this->bin_->get_section(kSectionPrefix + name) !=
+                return this->bin_->get_section(kSectionPrefix_ + name) !=
                        nullptr;
             }
 
             inline Section<HostOS::kLinux> *
             get_section_impl(const std::string &name) noexcept {
                 return static_cast<Section<HostOS::kLinux> *>(
-                    this->bin_->get_section(kSectionPrefix + name));
+                    this->bin_->get_section(kSectionPrefix_ + name));
             }
             inline const Section<HostOS::kLinux> *
             get_section_impl(const std::string &name) const noexcept {
                 return static_cast<Section<HostOS::kLinux> *>(
-                    this->bin_->get_section(kSectionPrefix + name));
+                    this->bin_->get_section(kSectionPrefix_ + name));
             }
 
             inline Section<HostOS::kLinux> &get_text_section_impl() noexcept {
@@ -103,6 +101,9 @@ namespace poly {
                 return impl::get_entry_point_ra();
             }
 
+            static constexpr Address kPageSize_ = 4096;
+            static const std::string kSectionPrefix_;
+
           private:
             /**
              * Check if the binary passed is a valid one, and if it is create a
@@ -112,7 +113,6 @@ namespace poly {
                 BinaryEditor<CustomBinaryEditor<HostOS::kLinux>>>
             check_and_init(std::unique_ptr<LIEF::ELF::Binary> &&bin);
 
-            static const std::string kSectionPrefix;
             std::unique_ptr<LIEF::ELF::Binary> bin_;
             LIEF::ELF::Section &text_section_;
         };

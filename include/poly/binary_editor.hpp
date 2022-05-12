@@ -236,8 +236,9 @@ namespace poly {
          * - const OsBinary &get_bin_impl() const noexcept
          * - Address get_entry_point_ra_impl() const noexcept
          * It also requires to the concrete class that extends it to define the
-         * puclis static member constant:
-         *      static constexpr Address kPageSize;
+         * protected static members:
+         * - static constexpr Address kPageSize_;
+         * - static const std::string kSectionPrefix_;
          */
         template <class Real>
         class CommonBinaryEditor : public BinaryEditor<Real> {
@@ -312,6 +313,10 @@ namespace poly {
                  * Retrieve the runtime address of binary's entry point.
                  */
                 static Address get_entry_point_ra(const Real &real) noexcept;
+
+                static constexpr Address kPageSize = Real::kPageSize_;
+                static constexpr const std::string &kSectionPrefix =
+                    Real::kSectionPrefix_;
             };
         };
 

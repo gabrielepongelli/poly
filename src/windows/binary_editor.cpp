@@ -29,8 +29,8 @@ namespace poly {
 
     namespace impl {
 
-        const std::string CustomBinaryEditor<HostOS::kWindows>::kSectionPrefix =
-            ".";
+        const std::string
+            CustomBinaryEditor<HostOS::kWindows>::kSectionPrefix_ = ".";
 
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kWindows>>>
         CustomBinaryEditor<HostOS::kWindows>::build(
@@ -79,7 +79,7 @@ namespace poly {
 
             // create the new section with the generated code inside
             LIEF::PE::Section section({content.begin(), content.end()},
-                                      kSectionPrefix + name);
+                                      kSectionPrefix_ + name);
 
             // say that the new section is executable and readable
             section.add_characteristic(
@@ -154,7 +154,7 @@ namespace poly {
                 return nullptr;
             }
 
-            auto *text_sect = bin->get_section(kSectionPrefix + "text");
+            auto *text_sect = bin->get_section(kSectionPrefix_ + "text");
 
             if (text_sect == nullptr) {
                 return nullptr;
