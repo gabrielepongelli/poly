@@ -11,6 +11,7 @@
 
 #include "poly/binary_editor.hpp"
 #include "poly/enums.hpp"
+#include "poly/filesystem.hpp"
 #include "poly/host_properties.hpp"
 #include "poly/utils.hpp"
 
@@ -23,8 +24,8 @@ namespace poly {
 
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
         CustomBinaryEditor<HostOS::kMacOS>::build(
-            const std::string &path) noexcept {
-            auto fat_bin = LIEF::MachO::Parser::parse(path);
+            const fs::path &path) noexcept {
+            auto fat_bin = LIEF::MachO::Parser::parse(path.string());
 
             if (fat_bin == nullptr) {
                 return nullptr;
@@ -37,9 +38,9 @@ namespace poly {
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
         CustomBinaryEditor<HostOS::kMacOS>::build(
             const std::vector<std::uint8_t> &raw,
-            const std::string &name) noexcept {
-            auto bin = LIEF::MachO::Parser::parse(raw, name)->take(
-                LIEF::MachO::CPU_TYPES::CPU_TYPE_X86_64);
+            const fs::path &path) noexcept {
+            auto bin = LIEF::MachO::Parser::parse(raw, path.string())
+                           ->take(LIEF::MachO::CPU_TYPES::CPU_TYPE_X86_64);
 
             return check_and_init(std::move(bin));
         }

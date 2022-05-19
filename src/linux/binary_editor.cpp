@@ -11,6 +11,7 @@
 
 #include "poly/binary_editor.hpp"
 #include "poly/enums.hpp"
+#include "poly/filesystem.hpp"
 #include "poly/host_properties.hpp"
 #include "poly/utils.hpp"
 
@@ -23,8 +24,8 @@ namespace poly {
 
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kLinux>>>
         CustomBinaryEditor<HostOS::kLinux>::build(
-            const std::string &path) noexcept {
-            auto bin = LIEF::ELF::Parser::parse(path);
+            const fs::path &path) noexcept {
+            auto bin = LIEF::ELF::Parser::parse(path.string());
 
             return check_and_init(std::move(bin));
         }
@@ -32,8 +33,8 @@ namespace poly {
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kLinux>>>
         CustomBinaryEditor<HostOS::kLinux>::build(
             const std::vector<std::uint8_t> &raw,
-            const std::string &name) noexcept {
-            auto bin = LIEF::ELF::Parser::parse(raw, name);
+            const fs::path &path) noexcept {
+            auto bin = LIEF::ELF::Parser::parse(raw, path.string());
 
             return check_and_init(std::move(bin));
         }

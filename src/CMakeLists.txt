@@ -5,6 +5,7 @@ set(HEADER_LIST
     utils.hpp
     binary_editor.hpp
     encryption.hpp
+    filesystem.hpp
 )
 
 set(SOURCE_LIST
@@ -85,4 +86,5 @@ target_link_libraries(poly
     PUBLIC
     ${LIB_ASMJIT}
     ${LIB_LIEF}
+    ${LIB_FS}
 )

@@ -11,6 +11,7 @@
 
 #include "poly/binary_editor.hpp"
 #include "poly/enums.hpp"
+#include "poly/filesystem.hpp"
 #include "poly/host_properties.hpp"
 #include "poly/utils.hpp"
 
@@ -34,8 +35,8 @@ namespace poly {
 
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kWindows>>>
         CustomBinaryEditor<HostOS::kWindows>::build(
-            const std::string &path) noexcept {
-            auto bin = LIEF::PE::Parser::parse(path);
+            const fs::path &path) noexcept {
+            auto bin = LIEF::PE::Parser::parse(path.string());
 
             return check_and_init(std::move(bin));
         }
@@ -43,8 +44,8 @@ namespace poly {
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kWindows>>>
         CustomBinaryEditor<HostOS::kWindows>::build(
             const std::vector<std::uint8_t> &raw,
-            const std::string &name) noexcept {
-            auto bin = LIEF::PE::Parser::parse(raw, name);
+            const fs::path &path) noexcept {
+            auto bin = LIEF::PE::Parser::parse(raw, name.string());
 
             return check_and_init(std::move(bin));
         }
@@ -126,7 +127,7 @@ namespace poly {
         }
 
         void CustomBinaryEditor<HostOS::kWindows>::save_changes(
-            const std::string &path) noexcept {
+            const fs::path &path) noexcept {
             LIEF::PE::Builder builder(*bin_);
 
             builder.build();
@@ -134,7 +135,7 @@ namespace poly {
             if (path.empty()) {
                 builder.write(bin_->name());
             } else {
-                builder.write(path);
+                builder.write(path.string());
             }
         }
 

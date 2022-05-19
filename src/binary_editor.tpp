@@ -11,6 +11,7 @@
 
 #include "poly/binary_editor.hpp"
 #include "poly/enums.hpp"
+#include "poly/filesystem.hpp"
 #include "poly/host_properties.hpp"
 #include "poly/utils.hpp"
 
@@ -29,7 +30,7 @@ namespace poly {
         template <class Real>
         std::unique_ptr<BinaryEditor<Real>>
         CommonBinaryEditor<Real>::build(std::istream &src, std::size_t size,
-                                        const std::string &name) noexcept {
+                                        const fs::path &path) noexcept {
             std::vector<std::uint8_t> raw(size, 0);
             try {
                 src.read(reinterpret_cast<char *>(raw.data()), size);
@@ -40,7 +41,7 @@ namespace poly {
                 }
             }
 
-            return std::move(Real::build(raw, name));
+            return std::move(Real::build(raw, path));
         }
 
         template <class Real>
@@ -143,14 +144,22 @@ namespace poly {
         }
 
         template <class Real>
-        void CommonBinaryEditor<Real>::save_changes(
-            const std::string &path) noexcept {
+        void
+        CommonBinaryEditor<Real>::save_changes(const fs::path &path) noexcept {
             if (path.empty()) {
                 ProtectedAccessor::get_bin(*this->real())
                     .write(ProtectedAccessor::get_bin(*this->real()).name());
             } else {
-                ProtectedAccessor::get_bin(*this->real()).write(path);
+                ProtectedAccessor::get_bin(*this->real()).write(path.string());
             }
+        }
+
+        template <class Real>
+        void
+        CommonBinaryEditor<Real>::save_changes(std::ostream &dst) noexcept {
+            std::vector<std::uint8_t> raw;
+            this->real()->save_changes(raw);
+            dst.write(reinterpret_cast<char *>(raw.data()), raw.size());
         }
 
         template <class Real>

@@ -8,10 +8,10 @@
 
 #include <LIEF/LIEF.hpp>
 #include <asmjit/asmjit.h>
-#include <boost/filesystem.hpp>
 #include <catch2/catch.hpp>
 
 #include <poly/binary_editor.hpp>
+#include <poly/filesystem.hpp>
 #include <poly/host_properties.hpp>
 
 #if defined(POLY_MACOS)
@@ -122,12 +122,12 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
                 auto res = TestEditor::build(text_file);
                 REQUIRE(res == nullptr);
 
-                boost::filesystem::remove(text_file);
+                poly::fs::remove(text_file);
             }
         }
 
         SECTION("Parse from stream") {
-            const auto size = boost::filesystem::file_size(hello_world_bin);
+            const auto size = poly::fs::file_size(hello_world_bin);
             std::ifstream target{hello_world_bin,
                                  std::ios::in | std::ios::binary};
 
@@ -259,11 +259,10 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
         be->exec_first(section_va);
         be->save_changes(test_bin);
 
-        REQUIRE(boost::filesystem::exists(test_bin));
+        REQUIRE(poly::fs::exists(test_bin));
 
-        boost::filesystem::permissions(test_bin,
-                                       boost::filesystem::perms::owner_exe |
-                                           boost::filesystem::perms::add_perms);
+        poly::fs::permissions(test_bin, poly::fs::perms::owner_exec,
+                              poly::fs::perm_options::add);
 
         std::string cmd = "";
         cmd = "./" + test_bin;
@@ -278,7 +277,7 @@ TEST_CASE("Modify the structure of a binary", "[unit][binary_editor]") {
         REQUIRE(res == rand_return_code);
     }
 
-    if (boost::filesystem::exists(test_bin)) {
-        boost::filesystem::remove(test_bin);
+    if (poly::fs::exists(test_bin)) {
+        poly::fs::remove(test_bin);
     }
 }

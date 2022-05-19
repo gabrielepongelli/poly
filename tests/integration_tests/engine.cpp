@@ -7,9 +7,9 @@
 #include <string>
 
 #include <LIEF/LIEF.hpp>
-#include <boost/filesystem.hpp>
 
 #include <poly/engine.hpp>
+#include <poly/filesystem.hpp>
 
 TEST_CASE("Code encryption on the fly", "[integration][engine]") {
     const std::string hello_world_bin =
@@ -29,11 +29,10 @@ TEST_CASE("Code encryption on the fly", "[integration][engine]") {
 #endif
     REQUIRE(res == 0);
 
-    REQUIRE(boost::filesystem::exists(result_bin));
+    REQUIRE(poly::fs::exists(result_bin));
 
-    boost::filesystem::permissions(result_bin,
-                                   boost::filesystem::perms::owner_exe |
-                                       boost::filesystem::perms::add_perms);
+    poly::fs::permissions(result_bin, poly::fs::perms::owner_exec,
+                          poly::fs::perm_options::add);
 
     const std::string test_string = "Hello, world!";
     cmd = "";
@@ -47,7 +46,7 @@ TEST_CASE("Code encryption on the fly", "[integration][engine]") {
 #endif
     REQUIRE(res == 0);
 
-    REQUIRE(boost::filesystem::exists(test_file));
+    REQUIRE(poly::fs::exists(test_file));
 
     std::ifstream file(test_file);
     REQUIRE(file);
@@ -61,6 +60,6 @@ TEST_CASE("Code encryption on the fly", "[integration][engine]") {
     file.close();
     REQUIRE(content == test_string + "\n");
 
-    boost::filesystem::remove(test_file);
-    boost::filesystem::remove(result_bin);
+    poly::fs::remove(test_file);
+    poly::fs::remove(result_bin);
 }

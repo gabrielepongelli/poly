@@ -11,6 +11,7 @@
 #include <LIEF/LIEF.hpp>
 
 #include "enums.hpp"
+#include "filesystem.hpp"
 #include "host_properties.hpp"
 #include "utils.hpp"
 
@@ -34,22 +35,22 @@ namespace poly {
          * a valid pointer will be returned.
          */
         static inline std::unique_ptr<BinaryEditor<Real>>
-        build(const std::string &path) noexcept {
+        build(const fs::path &path) noexcept {
             return std::move(Real::build(path));
         }
 
         /**
          * Build a new BinaryEditor.
          * @param raw raw bytes that make up the binary.
-         * @param name name of the binary. Default to empty.
+         * @param path path of the binary. Default to empty.
          * @returns nullptr if the bytes passed don't represent a valid
          * executable binary or if it doesn't have an entry point, otherwise a
          * valid pointer will be returned.
          */
         static inline std::unique_ptr<BinaryEditor<Real>>
         build(const std::vector<std::uint8_t> &raw,
-              const std::string &name = "") noexcept {
-            return std::move(Real::build(raw, name));
+              const fs::path &path = {}) noexcept {
+            return std::move(Real::build(raw, path));
         }
 
         /**
@@ -58,15 +59,15 @@ namespace poly {
          * @param size the size of the binary in bytes to read. If the stream is
          * shorter than size, this method tries to parse all the bytes read
          * until the end.
-         * @param name name of the binary. Default to empty.
+         * @param path path of the binary. Default to empty.
          * @returns nullptr if the bytes read don't represent a valid executable
          * binary or if it doesn't have an entry point, otherwise a valid
          * pointer will be returned.
          */
         static inline std::unique_ptr<BinaryEditor<Real>>
         build(std::istream &src, std::size_t size,
-              const std::string &name = "") noexcept {
-            return std::move(Real::build(src, size, name));
+              const fs::path &path = {}) noexcept {
+            return std::move(Real::build(src, size, path));
         }
 
         /**
@@ -200,13 +201,29 @@ namespace poly {
         }
 
         /**
-         * Write the changes on the executable.
+         * Reconstruct the binary.
          * @param path optional path where to save the modified binary. If
-         * is an empty string, the path will be the same of the binary
+         * is an empty path, the path will be the same of the binary
          * parsed by this binary editor. Default is empty.
          */
-        inline void save_changes(const std::string &path = "") noexcept {
+        inline void save_changes(const fs::path &path = {}) noexcept {
             this->real()->save_changes(path);
+        }
+
+        /**
+         * Reconstruct the binary.
+         * @param raw [out] raw bytes that will make up the final binary.
+         */
+        inline void save_changes(std::vector<std::uint8_t> &raw) noexcept {
+            this->real()->save_changes(raw);
+        }
+
+        /**
+         * Reconstruct the binary.
+         * @param dst output stream where to write the final binary.
+         */
+        inline void save_changes(std::ostream &dst) noexcept {
+            this->real()->save_changes(dst);
         }
     };
 
@@ -245,7 +262,7 @@ namespace poly {
           public:
             static std::unique_ptr<BinaryEditor<Real>>
             build(std::istream &src, std::size_t size,
-                  const std::string &name) noexcept;
+                  const fs::path &path) noexcept;
 
             static Address align_to_page_size(Address addr,
                                               std::size_t &len) noexcept;
@@ -268,7 +285,9 @@ namespace poly {
 
             RawCode get_section_content(const std::string &name) const noexcept;
 
-            void save_changes(const std::string &path) noexcept;
+            void save_changes(const fs::path &path) noexcept;
+
+            void save_changes(std::ostream &dst) noexcept;
 
           protected:
             /**

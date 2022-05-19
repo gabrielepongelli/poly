@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -10,6 +11,7 @@
 
 #include "poly/binary_editor.hpp"
 #include "poly/enums.hpp"
+#include "poly/filesystem.hpp"
 #include "poly/host_properties.hpp"
 #include "poly/utils.hpp"
 
@@ -34,19 +36,19 @@ namespace poly {
           public:
             static std::unique_ptr<
                 BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
-            build(const std::string &path) noexcept;
+            build(const fs::path &path) noexcept;
 
             static std::unique_ptr<
                 BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
             build(const std::vector<std::uint8_t> &raw,
-                  const std::string &name) noexcept;
+                  const fs::path &path) noexcept;
 
             static inline std::unique_ptr<
                 BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
             build(std::istream &src, std::size_t size,
-                  const std::string &name) noexcept {
+                  const fs::path &path) noexcept {
                 return CommonBinaryEditor<
-                    CustomBinaryEditor<HostOS::kMacOS>>::build(src, size, name);
+                    CustomBinaryEditor<HostOS::kMacOS>>::build(src, size, path);
             }
 
             Address first_execution_va() const noexcept;
@@ -77,6 +79,20 @@ namespace poly {
              * @return the old permissions.
              */
             std::uint8_t code_max_permissions(std::uint8_t perms) noexcept;
+
+            inline void save_changes(const fs::path &path) noexcept {
+                CommonBinaryEditor<
+                    CustomBinaryEditor<HostOS::kMacOS>>::save_changes(path);
+            }
+
+            inline void save_changes(std::vector<std::uint8_t> &raw) noexcept {
+                raw = std::move(this->bin_->raw());
+            }
+
+            inline void save_changes(std::ostream &dst) noexcept {
+                CommonBinaryEditor<
+                    CustomBinaryEditor<HostOS::kMacOS>>::save_changes(dst);
+            }
 
           protected:
             CustomBinaryEditor(std::unique_ptr<LIEF::MachO::Binary> &&bin,

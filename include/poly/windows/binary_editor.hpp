@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -8,6 +9,7 @@
 
 #include "poly/binary_editor.hpp"
 #include "poly/enums.hpp"
+#include "poly/filesystem.hpp"
 #include "poly/host_properties.hpp"
 #include "poly/utils.hpp"
 
@@ -32,20 +34,20 @@ namespace poly {
           public:
             static std::unique_ptr<
                 BinaryEditor<CustomBinaryEditor<HostOS::kWindows>>>
-            build(const std::string &path) noexcept;
+            build(const fs::path &path) noexcept;
 
             static std::unique_ptr<
                 BinaryEditor<CustomBinaryEditor<HostOS::kWindows>>>
             build(const std::vector<std::uint8_t> &raw,
-                  const std::string &name) noexcept;
+                  const fs::path &path) noexcept;
 
             static inline std::unique_ptr<
                 BinaryEditor<CustomBinaryEditor<HostOS::kWindows>>>
             build(std::istream &src, std::size_t size,
-                  const std::string &name) noexcept {
+                  const fs::path &path) noexcept {
                 return CommonBinaryEditor<
                     CustomBinaryEditor<HostOS::kWindows>>::build(src, size,
-                                                                 name);
+                                                                 path);
             }
 
             /**
@@ -77,7 +79,18 @@ namespace poly {
             Error update_content(const std::string &name,
                                  const RawCode &content) noexcept;
 
-            void save_changes(const std::string &path) noexcept;
+            void save_changes(const fs::path &path) noexcept;
+
+            inline void save_changes(std::vector<std::uint8_t> &raw) noexcept {
+                LIEF::PE::Builder builder(*bin_);
+                builder.build();
+                raw = std::move(builder.get_build());
+            }
+
+            inline void save_changes(std::ostream &dst) noexcept {
+                CommonBinaryEditor<
+                    CustomBinaryEditor<HostOS::kWindows>>::save_changes(dst);
+            }
 
           protected:
             CustomBinaryEditor(std::unique_ptr<LIEF::PE::Binary> &&bin,
