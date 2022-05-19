@@ -34,7 +34,7 @@ namespace poly {
             std::vector<std::uint8_t> raw(size, 0);
             try {
                 src.read(reinterpret_cast<char *>(raw.data()), size);
-            } catch (std::ios_base::failure &e) {
+            } catch (std::ios_base::failure &) {
                 if ((src.exceptions() & std::ios_base::eofbit) !=
                     std::ios_base::eofbit) {
                     return nullptr;

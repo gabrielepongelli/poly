@@ -81,8 +81,8 @@ namespace poly {
             auto working_data = secret.iv;
             auto extra_data_src = src.size() % size;
             auto extra_data_dst = dst.size() % size;
-            auto for_limit = std::min(src.size() - extra_data_src,
-                                      dst.size() - extra_data_dst);
+            auto for_limit = std::min<>(src.size() - extra_data_src,
+                                        dst.size() - extra_data_dst);
             for (std::size_t i = 0; i < for_limit; i = i + size) {
                 working_data =
                     working_data ^ BlockBuilder<size>::build(src.data() + i);

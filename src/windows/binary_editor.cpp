@@ -25,6 +25,14 @@
 #define POLY_IMAGE_SCN_MEM_READ IMAGE_SCN_MEM_READ
 #undef IMAGE_SCN_MEM_READ
 #endif
+#ifdef IMAGE_SCN_CNT_CODE
+#define POLY_IMAGE_SCN_CNT_CODE IMAGE_SCN_CNT_CODE
+#undef IMAGE_SCN_CNT_CODE
+#endif
+#ifdef IMAGE_FILE_EXECUTABLE_IMAGE
+#define POLY_IMAGE_FILE_EXECUTABLE_IMAGE IMAGE_FILE_EXECUTABLE_IMAGE
+#undef IMAGE_FILE_EXECUTABLE_IMAGE
+#endif
 
 namespace poly {
 
@@ -45,7 +53,7 @@ namespace poly {
         CustomBinaryEditor<HostOS::kWindows>::build(
             const std::vector<std::uint8_t> &raw,
             const fs::path &path) noexcept {
-            auto bin = LIEF::PE::Parser::parse(raw, name.string());
+            auto bin = LIEF::PE::Parser::parse(raw, path.string());
 
             return check_and_init(std::move(bin));
         }
@@ -215,4 +223,12 @@ namespace poly {
 #ifdef POLY_IMAGE_SCN_MEM_READ
 #define IMAGE_SCN_MEM_READ POLY_IMAGE_SCN_MEM_READ
 #undef POLY_IMAGE_SCN_MEM_READ
+#endif
+#ifdef POLY_IMAGE_SCN_CNT_CODE
+#define IMAGE_SCN_CNT_CODE POLY_IMAGE_SCN_CNT_CODE
+#undef POLY_IMAGE_SCN_CNT_CODE
+#endif
+#ifdef POLY_IMAGE_FILE_EXECUTABLE_IMAGE
+#define IMAGE_FILE_EXECUTABLE_IMAGE POLY_IMAGE_FILE_EXECUTABLE_IMAGE
+#undef POLY_IMAGE_FILE_EXECUTABLE_IMAGE
 #endif
