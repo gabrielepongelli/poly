@@ -90,6 +90,12 @@ namespace poly {
                 BlockBuilder<size>::to_bytes(working_data, dst.data() + i);
             }
 
+            if (src.data() != dst.data()) {
+                auto min = std::min<>(src.size(), dst.size());
+                std::copy(src.data() + for_limit, src.data() + min,
+                          dst.data() + for_limit);
+            }
+
             if (extra_data_src != 0 || extra_data_dst != 0) {
                 return Error::kNotAligned;
             } else {
