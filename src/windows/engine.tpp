@@ -38,8 +38,9 @@ namespace poly {
 
             // mandatory line that use the VirtualProtect function so that it
             // can be added to the imported functions automatically during the
-            // linking
-            auto *a = &VirtualProtect;
+            // linking. This call will certainly fail because the 4th argument
+            // is nullptr.
+            VirtualProtect(0, 0, 0, nullptr);
 
             auto &windows_editor = static_cast<OsBinaryEditor &>(this->editor_);
             asmjit::x86::Mem virtualprotect_va(
