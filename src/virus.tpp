@@ -246,7 +246,7 @@ namespace poly {
                Compiler>::write_modified_target(const fs::path &target,
                                                 std::size_t target_size,
                                                 bool only_attached) noexcept {
-        std::fstream out{target,
+        std::fstream out{target.string(),
                          std::ios::in | std::ios::out | std::ios::binary};
         if (!out.is_open()) {
             return false;
