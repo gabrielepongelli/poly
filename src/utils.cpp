@@ -5,7 +5,7 @@
 
 namespace poly {
 
-    RandomGenerator &RandomGenerator::get_generator() {
+    RandomGenerator &RandomGenerator::get_generator() noexcept {
         static std::unique_ptr<RandomGenerator> common_gen;
 
         if (common_gen.get() == nullptr) {
@@ -16,10 +16,11 @@ namespace poly {
         return *common_gen;
     }
 
-    RandomGenerator::RandomGenerator() : generator_{std::random_device{}()} {}
+    RandomGenerator::RandomGenerator() noexcept
+        : generator_{std::random_device{}()} {}
 
     template <>
-    bool RandomGenerator::get_random<bool>() {
+    bool RandomGenerator::get_random<bool>() noexcept {
         std::uniform_int_distribution<int> distribution{0, 1};
         return distribution(generator_);
     }

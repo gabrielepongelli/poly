@@ -51,6 +51,16 @@ namespace poly {
         using is_detected_t =
             typename is_detected_impl<Trait, void, Args...>::type;
 
+        // make_array
+        template <typename... T>
+        constexpr auto make_array(T &&...values) -> std::array<
+            typename std::decay<typename std::common_type<T...>::type>::type,
+            sizeof...(T)> {
+            return std::array<typename std::decay<
+                                  typename std::common_type<T...>::type>::type,
+                              sizeof...(T)>{std::forward<T>(values)...};
+        }
+
     } // namespace impl
 
     using Address = std::uint64_t;
@@ -66,21 +76,21 @@ namespace poly {
         ~RandomGenerator() = default;
 
         template <typename T>
-        T get_random();
+        T get_random() noexcept;
 
         template <typename T>
-        const T &random_from(const std::vector<T> &v);
+        const T &random_from(const std::vector<T> &v) noexcept;
 
         template <typename T>
-        T &random_from(std::vector<T> &v);
+        T &random_from(std::vector<T> &v) noexcept;
 
         template <typename T>
-        auto &random_from_it(const T &s, std::size_t n);
+        auto &random_from_it(const T &s, std::size_t n) noexcept;
 
-        static RandomGenerator &get_generator();
+        static RandomGenerator &get_generator() noexcept;
 
       private:
-        RandomGenerator();
+        RandomGenerator() noexcept;
 
         std::minstd_rand generator_;
     };

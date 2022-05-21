@@ -26,7 +26,28 @@ namespace poly {
         kInvalidOffset,
 
         // The length of the data is not a multyple of size
-        kNotAligned
+        kNotAligned,
+
+        // The access to the file specified is not permitted
+        kFileAccessDenied,
+
+        // The path of the target specified is malformed
+        kMalformedPath,
+
+        // An error occurred wile trying to write into a specific file
+        kFileWritingFailed,
+
+        // An error occurred wile trying to copy a file
+        kFileCopyFailed,
+
+        // This binary doesn't have an attached target binary to run
+        kNoTargetAttached,
+
+        // The target was not previously executed
+        kTargetNotExecuted,
+
+        // The target is already in execution
+        kTargetAlreadyInExecution
     };
 
     enum class EncryptionAlgorithmType {

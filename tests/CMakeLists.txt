@@ -5,6 +5,7 @@ add_executable(tests
     unit_tests/binary_editor.cpp
     unit_tests/encryption.cpp
     integration_tests/engine.cpp
+    integration_tests/virus.cpp
 )
 
 # Required by AsmJIT to link itself statically in the correct way
@@ -22,6 +23,10 @@ add_executable(hello_world
     test_binaries/hello_world.cpp
 )
 
+add_executable(file_test
+    test_binaries/file_test.cpp
+)
+
 add_executable(engine_test
     test_binaries/engine_test.cpp
 )
@@ -30,6 +35,15 @@ target_link_libraries(engine_test
     PRIVATE
     poly
     ${LIB_CATCH2}
+)
+
+add_executable(virus_test
+    test_binaries/virus_test.cpp
+)
+
+target_link_libraries(virus_test
+    PRIVATE
+    poly
 )
 
 set(TEST_DIR "${CMAKE_CURRENT_BINARY_DIR}")

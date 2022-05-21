@@ -9,30 +9,30 @@
 namespace poly {
 
     template <typename T>
-    T RandomGenerator::get_random() {
+    T RandomGenerator::get_random() noexcept {
         std::uniform_int_distribution<T> distribution{};
         return distribution(generator_);
     }
 
     template <>
-    bool RandomGenerator::get_random<bool>();
+    bool RandomGenerator::get_random<bool>() noexcept;
 
     template <typename T>
-    const T &RandomGenerator::random_from(const std::vector<T> &v) {
+    const T &RandomGenerator::random_from(const std::vector<T> &v) noexcept {
         std::uniform_int_distribution<std::size_t> distribution{0,
                                                                 v.size() - 1};
         return v.at(distribution(generator_));
     }
 
     template <typename T>
-    T &RandomGenerator::random_from(std::vector<T> &v) {
+    T &RandomGenerator::random_from(std::vector<T> &v) noexcept {
         std::uniform_int_distribution<std::size_t> distribution{0,
                                                                 v.size() - 1};
         return v[distribution(generator_)];
     }
 
     template <typename T>
-    auto &RandomGenerator::random_from_it(const T &s, std::size_t n) {
+    auto &RandomGenerator::random_from_it(const T &s, std::size_t n) noexcept {
         auto it = std::begin(s);
 
         std::uniform_int_distribution<std::size_t> distribution{0, n - 1};
@@ -45,6 +45,6 @@ namespace poly {
         return *it;
     }
 
-    static RandomGenerator &get_generator();
+    static RandomGenerator &get_generator() noexcept;
 
 } // namespace poly
