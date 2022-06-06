@@ -80,28 +80,16 @@ namespace poly {
             }
 
             LIEF::ELF::Section *section = this->get_section_impl(name);
-            LIEF::ELF::Segment *segment = nullptr;
-            if (section->segments().empty() &&
-                (segment = this->bin_->segment_from_virtual_address(
-                     section->virtual_address())) != nullptr &&
-                section->virtual_address() != 0) {
-                // it is an injected section that has to be loaded
-                // for newly created sections in order to modify their contet,
-                // they must be removed and re-added to the binary
-                LIEF::ELF::Section new_sect{*section};
+            int size_offset = content.size() - section->size();
 
-                // also its segment must be deleted since a new one will be
-                // created when the section will be re-added and the old one
-                // will be unused
-                this->bin_->remove(*segment);
-                this->bin_->remove(*section);
-                new_sect.content({content.begin(), content.end()});
-                this->bin_->add(new_sect);
+            if (size_offset > 0) {
+                this->bin_->extend(*section, size_offset);
             } else {
-                // it is an existing section or a new section that must not be
-                // loaded
-                section->content({content.begin(), content.end()});
+                section->clear(0);
+                section->size(content.size());
             }
+
+            section->content({content.begin(), content.end()});
 
             return Error::kNone;
         }

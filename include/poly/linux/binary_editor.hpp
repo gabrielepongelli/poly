@@ -62,11 +62,19 @@ namespace poly {
                                  const RawCode &content) noexcept;
 
             inline void save_changes(const fs::path &path) noexcept {
+                if (this->bin_->has_overlay()) {
+                    this->bin_->overlay({});
+                }
+
                 CommonBinaryEditor<
                     CustomBinaryEditor<HostOS::kLinux>>::save_changes(path);
             }
 
             inline void save_changes(std::vector<std::uint8_t> &raw) noexcept {
+                if (this->bin_->has_overlay()) {
+                    this->bin_->overlay({});
+                }
+
                 raw = std::move(this->bin_->raw());
             }
 

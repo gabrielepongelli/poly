@@ -22,6 +22,9 @@ namespace poly {
         const std::string CustomBinaryEditor<HostOS::kMacOS>::kSectionPrefix_ =
             "__";
 
+        const std::string CustomBinaryEditor<HostOS::kMacOS>::kNewSegmentName_ =
+            CustomBinaryEditor<HostOS::kMacOS>::kSectionPrefix_ + "NEW";
+
         std::unique_ptr<BinaryEditor<CustomBinaryEditor<HostOS::kMacOS>>>
         CustomBinaryEditor<HostOS::kMacOS>::build(
             const fs::path &path) noexcept {
@@ -75,17 +78,119 @@ namespace poly {
                 return Error::kSectionAlreadyExists;
             }
 
-            // create the new section with the generated code inside
-            LIEF::MachO::Section section(kSectionPrefix_ + name,
-                                         {content.begin(), content.end()});
+            auto *segment = bin_->get_segment(kNewSegmentName_);
+            if (segment == nullptr) {
+                LIEF::MachO::SegmentCommand seg_cmd{kNewSegmentName_};
+                seg_cmd.max_protection(0x5);
+                seg_cmd.init_protection(0x5);
+                segment = static_cast<LIEF::MachO::SegmentCommand *>(
+                    this->bin_->add(seg_cmd));
+            }
 
-            // say that the new section contains executable code
+            // calculate the total size of the sections (with the new one)
+            std::size_t sizeof_all_sections = content.size();
+            for (auto &s : segment->sections()) {
+                sizeof_all_sections += s.size();
+            }
+
+            // create the new section
+            LIEF::MachO::Section section(kSectionPrefix_ + name);
+            section.virtual_address(segment->virtual_address() +
+                                    sizeof_all_sections - content.size());
+            section.offset(segment->file_offset() + sizeof_all_sections -
+                           content.size());
+            section.alignment(this->text_section_.alignment());
             section +=
                 LIEF::MachO::MACHO_SECTION_FLAGS::S_ATTR_SOME_INSTRUCTIONS;
             section +=
                 LIEF::MachO::MACHO_SECTION_FLAGS::S_ATTR_PURE_INSTRUCTIONS;
 
-            this->bin_->add_section(section);
+            auto *added_section = this->bin_->add_section(*segment, section);
+
+            // if not enough space or if the segment has just been created
+            // extends it
+            if (segment->file_size() == 0 ||
+                segment->file_size() < sizeof_all_sections) {
+                auto seg_file_size = segment->file_size();
+                std::size_t new_size = seg_file_size + content.size();
+                if (new_size < kSegmentMinSize_) {
+                    new_size = kSegmentMinSize_;
+                } else {
+                    auto additional_data = new_size % kPageSize_;
+                    new_size +=
+                        additional_data > 0 ? kPageSize_ - additional_data : 0;
+                }
+
+                std::vector<std::uint8_t> data(new_size, 0);
+                std::copy(segment->content().begin(), segment->content().end(),
+                          data.begin());
+                segment->file_size(data.size());
+                segment->virtual_size(data.size());
+                segment->content(data);
+
+                // since this segment will be located right before the
+                // __LINKEDIT segment (which is the last one), the only thing
+                // to do is to shift it to make space for the new data
+                this->bin_->shift_linkedit(data.size() - seg_file_size);
+            }
+
+            // add the content to the newly created section and update its size
+            if (content.size() > 0) {
+                added_section->size(content.size());
+                added_section->content(
+                    std::vector<std::uint8_t>(content.begin(), content.end()));
+            }
+
+            return Error::kNone;
+        }
+
+        Error CustomBinaryEditor<HostOS::kMacOS>::update_content(
+            const std::string &name, const RawCode &content) noexcept {
+            if (!this->has_section_impl(name)) {
+                return Error::kSectionNotFound;
+            }
+
+            auto *section = this->get_section_impl(name);
+            auto *segment = section->segment();
+
+            if (section->size() < content.size()) {
+                auto section_size_offset = content.size() - section->size();
+
+                // calculate the total size of the sections (with the updated
+                // size of the new one)
+                std::size_t sizeof_all_sections = section_size_offset;
+                for (auto &s : segment->sections()) {
+                    sizeof_all_sections += s.size();
+                }
+
+                if (segment->file_size() < sizeof_all_sections) {
+                    // align offset to page size
+                    auto segment_offset =
+                        sizeof_all_sections - segment->file_size();
+                    auto extra_len = segment_offset % kPageSize_;
+                    if (extra_len > 0) {
+                        segment_offset += kPageSize_ - extra_len;
+                    }
+
+                    this->bin_->extend_segment(*segment, segment_offset);
+                }
+
+                // shift all the sections placed after the modified one
+                for (auto &s : segment->sections()) {
+                    if (s.offset() > section->offset()) {
+                        s.offset(s.offset() + section_size_offset);
+                        s.virtual_address(s.virtual_address() +
+                                          section_size_offset);
+                    }
+                }
+            } else {
+                section->clear(0);
+            }
+
+            // add the modified content to the section and update its size
+            section->size(content.size());
+            section->content(
+                std::vector<std::uint8_t>(content.begin(), content.end()));
 
             return Error::kNone;
         }

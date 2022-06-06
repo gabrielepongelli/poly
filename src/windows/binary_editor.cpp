@@ -109,6 +109,7 @@ namespace poly {
                 return Error::kSectionNotFound;
 
             auto *section = ProtectedAccessor::get_section(*this->real(), name);
+            section->clear(0);
 
             // must be done, otherwise with g++ the size will not be really
             // updated
@@ -130,8 +131,12 @@ namespace poly {
                 return 0;
             }
 
-            return import->get_function_rva_from_iat(function_name) +
-                   import->import_address_table_rva();
+            auto rva = import->get_function_rva_from_iat(function_name);
+            if (rva) {
+                return rva.value() + import->import_address_table_rva();
+            } else {
+                return 0;
+            }
         }
 
         void CustomBinaryEditor<HostOS::kWindows>::save_changes(

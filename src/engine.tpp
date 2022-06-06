@@ -33,6 +33,7 @@ namespace poly {
                     return_inst = n->template as<asmjit::InstNode>();
                     if (return_inst->id() != asmjit::x86::Inst::kIdRet) {
                         return_inst = nullptr;
+                        n = n->prev();
                     }
                 } else if (n == this->_cb->firstNode()) {
                     return asmjit::kErrorOk;
@@ -77,8 +78,21 @@ namespace poly {
                 "&, "
                 "Register &, std::size_t, asmjit::Label &)");
 
-            this->compiler_->addFunc(asmjit::FuncSignatureT<void>());
+            auto *func_node =
+                this->compiler_->addFunc(asmjit::FuncSignatureT<void>());
             auto exit_label = this->compiler_->newLabel();
+            auto *args = func_node->detail().callConv().passedOrder(
+                asmjit::RegGroup::kGp);
+            constexpr auto kArgsCount = 8;
+
+            // push all the registers which could contain data passed by
+            // argument
+            for (auto i = 0; i < kArgsCount; i++) {
+                auto reg = this->compiler_->gpz(args[i]);
+                if (reg.isPhysReg()) {
+                    this->compiler_->push(reg);
+                }
+            }
 
             ProtectedAccessor::generate_syscall(
                 *this->real(), this->editor_.text_section_va(),
@@ -94,6 +108,16 @@ namespace poly {
                 this->editor_.text_section_size(), exit_label);
 
             this->compiler_->bind(exit_label);
+
+            // restore all the registers which could contain data passed by
+            // argument
+            for (auto i = kArgsCount - 1; i >= 0; i--) {
+                auto reg = this->compiler_->gpz(args[i]);
+                if (reg.isPhysReg()) {
+                    this->compiler_->pop(reg);
+                }
+            }
+
             this->compiler_->endFunc();
         }
 
@@ -133,7 +157,7 @@ namespace poly {
             this->code_holder_.relocateToBase(base_va);
 
             auto *code_section = this->code_holder_.textSection();
-            return RawCode{code_section->data(), code_section->realSize()};
+            return RawCode{code_section->data(), this->code_holder_.codeSize()};
         }
 
         template <class Real, class Cipher, class Compiler, class Editor>
