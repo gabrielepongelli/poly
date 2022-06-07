@@ -27,7 +27,7 @@ poly::fs::path incremental_copy(
     return res;
 }
 
-TEST_CASE("Infect other binaries", "[integration][virus]") {
+TEST_CASE("Infect other binaries", "[virus][integration]") {
     const poly::fs::path virus_bin{poly::kOS == poly::HostOS::kWindows
                                        ? "./virus_test.exe"
                                        : "./virus_test"};
@@ -42,7 +42,8 @@ TEST_CASE("Infect other binaries", "[integration][virus]") {
     std::string cmd = "";
     auto size_before = poly::fs::file_size(target_copy1);
     auto perms_before = poly::fs::status(target_copy1).permissions();
-    cmd = virus_bin.string() + " " + target_copy1.string();
+    std::string target = target_copy1.string();
+    cmd = virus_bin.string() + " " + target;
     auto res = std::system(cmd.c_str());
 #ifndef POLY_WINDOWS
     res = WEXITSTATUS(res);
@@ -57,7 +58,8 @@ TEST_CASE("Infect other binaries", "[integration][virus]") {
     auto gen = Rand32BitGen(2, 255);
     int test_return_value = get(gen);
     cmd = "";
-    cmd = target_copy1.string() + " " + target_copy2.string() + " " +
+    target = target_copy2.string();
+    cmd = target_copy1.string() + " " + target + " " +
           std::to_string(test_return_value) + " " + test_file + " \"" +
           test_string + "\"";
     res = std::system(cmd.c_str());
@@ -88,7 +90,8 @@ TEST_CASE("Infect other binaries", "[integration][virus]") {
 
     test_return_value = get(gen);
     cmd = "";
-    cmd = target_copy2.string() + " \"\" " + std::to_string(test_return_value) +
+    target = poly::kOS == poly::HostOS::kWindows ? " `\"`\" " : " \"\" ";
+    cmd = target_copy2.string() + target + std::to_string(test_return_value) +
           " " + test_file + " \"" + test_string + "\"";
     res = std::system(cmd.c_str());
 #ifndef POLY_WINDOWS
