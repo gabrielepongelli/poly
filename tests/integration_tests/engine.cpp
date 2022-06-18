@@ -3,26 +3,21 @@
 #include <cstdlib>
 
 #include <fstream>
-#include <iostream>
 #include <string>
 
-#include <LIEF/LIEF.hpp>
-
-#include <poly/engine.hpp>
 #include <poly/filesystem.hpp>
+#include <poly/host_properties.hpp>
 
 TEST_CASE("Code encryption on the fly", "[integration][engine]") {
-    const std::string hello_world_bin =
-        poly::kOS == poly::HostOS::kWindows ? "engine_test.exe" : "engine_test";
-    const std::string result_bin =
-        poly::kOS == poly::HostOS::kWindows ? "result.exe" : "result";
-    const std::string test_file = "test.txt";
+    const poly::fs::path test_bin{poly::kOS == poly::HostOS::kWindows
+                                      ? "./engine_test.exe"
+                                      : "./engine_test"};
+    const poly::fs::path result_bin{
+        poly::kOS == poly::HostOS::kWindows ? "./result.exe" : "./result"};
+    const poly::fs::path test_file{"test.txt"};
 
     std::string cmd = "";
-    cmd = "./" + hello_world_bin + " " + result_bin;
-    if (poly::kOS == poly::HostOS::kWindows) {
-        cmd = cmd.replace(1, 1, "\\");
-    }
+    cmd = test_bin.string() + " " + result_bin.string();
     auto res = std::system(cmd.c_str());
 #ifndef POLY_WINDOWS
     res = WEXITSTATUS(res);
@@ -36,10 +31,8 @@ TEST_CASE("Code encryption on the fly", "[integration][engine]") {
 
     const std::string test_string = "Hello, world!";
     cmd = "";
-    cmd = "./" + hello_world_bin + " " + test_file + " \"" + test_string + "\"";
-    if (poly::kOS == poly::HostOS::kWindows) {
-        cmd = cmd.replace(1, 1, "\\");
-    }
+    cmd = result_bin.string() + " " + test_file.string() + " \"" + test_string +
+          "\"";
     res = std::system(cmd.c_str());
 #ifndef POLY_WINDOWS
     res = WEXITSTATUS(res);

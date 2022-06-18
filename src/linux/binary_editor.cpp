@@ -80,12 +80,15 @@ namespace poly {
             }
 
             LIEF::ELF::Section *section = this->get_section_impl(name);
+            LIEF::ELF::Segment *segment =
+                this->bin_->segment_from_virtual_address(
+                    section->virtual_address());
+
             int size_offset = content.size() - section->size();
 
             if (size_offset > 0) {
                 this->bin_->extend(*section, size_offset);
             } else {
-                section->clear(0);
                 section->size(content.size());
             }
 

@@ -272,6 +272,11 @@ namespace poly {
         } else {
             this->editor_->save_changes(out);
 
+            if (!this->is_first_execution()) {
+                out.seekg(this->total_size_ - sizeof(std::uint64_t) -
+                          sizeof(Address) - this->attached_file_size_);
+            }
+
             out.write(reinterpret_cast<char *>(target_content.data()),
                       target_size);
 

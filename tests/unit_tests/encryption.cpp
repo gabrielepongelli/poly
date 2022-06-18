@@ -82,7 +82,7 @@ TEST_CASE("Encrypt and decrypt data", "[unit][encryption]") {
             cc.endFunc();
             cc.finalize();
 
-            typedef void (*Decrypt)(void *);
+            using Decrypt = void (*)(void *);
 
             Decrypt decr;
             asmjit::Error err = rt.add(&decr, &code);

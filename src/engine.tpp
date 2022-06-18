@@ -19,13 +19,13 @@ namespace poly {
     namespace impl {
 
         template <class Real, class Cipher, class Compiler, class Editor>
-        PolymorphicEngineBase<Real, Cipher, Compiler, Editor>::RetToJmpPass::
-            RetToJmpPass(std::uint64_t va)
-            : asmjit::Pass{"RetToJmpPass"}, va_{va} {}
+        PolymorphicEngineBase<Real, Cipher, Compiler,
+                              Editor>::DeleteRetPass::DeleteRetPass()
+            : asmjit::Pass{"DeleteRetPass"} {}
 
         template <class Real, class Cipher, class Compiler, class Editor>
         asmjit::Error PolymorphicEngineBase<Real, Cipher, Compiler, Editor>::
-            RetToJmpPass::run(asmjit::Zone *zone, asmjit::Logger *logger) {
+            DeleteRetPass::run(asmjit::Zone *zone, asmjit::Logger *logger) {
             asmjit::InstNode *return_inst = nullptr;
             auto *n = this->_cb->lastNode();
             while (return_inst == nullptr) {
@@ -42,8 +42,7 @@ namespace poly {
                 }
             }
 
-            return_inst->setId(asmjit::x86::Inst::kIdJmp);
-            return_inst->setOp(0, asmjit::Imm(this->va_));
+            this->_cb->removeNode(return_inst);
 
             return asmjit::kErrorOk;
         }
@@ -78,11 +77,10 @@ namespace poly {
                 "&, "
                 "Register &, std::size_t, asmjit::Label &)");
 
-            auto *func_node =
-                this->compiler_->addFunc(asmjit::FuncSignatureT<void>());
-            auto exit_label = this->compiler_->newLabel();
-            auto *args = func_node->detail().callConv().passedOrder(
-                asmjit::RegGroup::kGp);
+            asmjit::CallConv call_conv{};
+            call_conv.init(asmjit::CallConvId::kHost,
+                           asmjit::Environment::host());
+            auto *args = call_conv.passedOrder(asmjit::RegGroup::kGp);
             constexpr auto kArgsCount = 8;
 
             // push all the registers which could contain data passed by
@@ -93,6 +91,9 @@ namespace poly {
                     this->compiler_->push(reg);
                 }
             }
+
+            this->compiler_->addFunc(asmjit::FuncSignatureT<void>());
+            auto exit_label = this->compiler_->newLabel();
 
             ProtectedAccessor::generate_syscall(
                 *this->real(), this->editor_.text_section_va(),
@@ -108,6 +109,7 @@ namespace poly {
                 this->editor_.text_section_size(), exit_label);
 
             this->compiler_->bind(exit_label);
+            this->compiler_->endFunc();
 
             // restore all the registers which could contain data passed by
             // argument
@@ -117,8 +119,6 @@ namespace poly {
                     this->compiler_->pop(reg);
                 }
             }
-
-            this->compiler_->endFunc();
         }
 
         template <class Real, class Cipher, class Compiler, class Editor>
@@ -149,7 +149,8 @@ namespace poly {
         RawCode
         PolymorphicEngineBase<Real, Cipher, Compiler, Editor>::produce_raw(
             Address base_va, Address jump_va) noexcept {
-            this->compiler_->template addPassT<RetToJmpPass>(jump_va);
+            this->compiler_->jmp(jump_va);
+            this->compiler_->template addPassT<DeleteRetPass>();
 
             this->compiler_->finalize();
             this->code_holder_.flatten();

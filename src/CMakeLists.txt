@@ -90,3 +90,16 @@ target_link_libraries(poly
     ${LIB_LIEF}
     ${LIB_FS}
 )
+
+if(MINGW AND(CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
+    set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/scripts/windows/mingw_gcc_linker.ld")
+
+    target_link_options(poly
+        INTERFACE
+        "SHELL:-T ${LINKER_SCRIPT}"
+    )
+
+    set_target_properties(poly
+        PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT}
+    )
+endif()

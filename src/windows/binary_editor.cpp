@@ -98,7 +98,16 @@ namespace poly {
             section.add_characteristic(
                 LIEF::PE::SECTION_CHARACTERISTICS::IMAGE_SCN_CNT_CODE);
 
-            this->bin_->add_section(section, LIEF::PE::PE_SECTION_TYPES::TEXT);
+            auto *added_section = this->bin_->add_section(
+                section, LIEF::PE::PE_SECTION_TYPES::TEXT);
+
+            // if has COFF header update its info
+            if (this->bin_->header().pointerto_symbol_table() > 0) {
+                auto new_sym_tab_ptr =
+                    this->bin_->header().pointerto_symbol_table() +
+                    added_section->size();
+                this->bin_->header().pointerto_symbol_table(new_sym_tab_ptr);
+            }
 
             return Error::kNone;
         }
@@ -111,12 +120,21 @@ namespace poly {
             auto *section = ProtectedAccessor::get_section(*this->real(), name);
             section->clear(0);
 
+            int offset = content.size() - section->size();
+
             // must be done, otherwise with g++ the size will not be really
             // updated
             section->virtual_size(content.size());
 
             section->size(content.size());
             section->content({content.begin(), content.end()});
+
+            // if has COFF header update its info
+            if (this->bin_->header().pointerto_symbol_table() > 0) {
+                auto new_sym_tab_ptr =
+                    this->bin_->header().pointerto_symbol_table() + offset;
+                this->bin_->header().pointerto_symbol_table(new_sym_tab_ptr);
+            }
 
             return Error::kNone;
         }
@@ -142,7 +160,6 @@ namespace poly {
         void CustomBinaryEditor<HostOS::kWindows>::save_changes(
             const fs::path &path) noexcept {
             LIEF::PE::Builder builder(*bin_);
-
             builder.build();
 
             if (path.empty()) {

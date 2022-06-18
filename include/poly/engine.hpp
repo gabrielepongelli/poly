@@ -103,19 +103,12 @@ namespace poly {
             };
 
             /**
-             * Structure needed to transform the final ret instruction
+             * Structure needed to delete the final ret instruction
              * automatically generated from Compiler into a jmp instruction.
              */
-            struct RetToJmpPass : public asmjit::Pass {
-                /**
-                 * @param va virtual address where to jump.
-                 */
-                RetToJmpPass(std::uint64_t va);
-
+            struct DeleteRetPass : public asmjit::Pass {
+                DeleteRetPass();
                 asmjit::Error run(asmjit::Zone *zone, asmjit::Logger *logger);
-
-              private:
-                std::uint64_t va_;
             };
         };
 

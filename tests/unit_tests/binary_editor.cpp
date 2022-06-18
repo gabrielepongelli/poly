@@ -1,3 +1,5 @@
+#include <catch2/catch.hpp>
+
 #include <cstdlib>
 
 #include <algorithm>
@@ -8,7 +10,6 @@
 
 #include <LIEF/LIEF.hpp>
 #include <asmjit/asmjit.h>
-#include <catch2/catch.hpp>
 
 #include <poly/binary_editor.hpp>
 #include <poly/filesystem.hpp>
