@@ -41,7 +41,7 @@ TEST_CASE("Code encryption on the fly", "[integration][engine]") {
 
     REQUIRE(poly::fs::exists(test_file));
 
-    std::ifstream file(test_file);
+    std::ifstream file(test_file.string());
     REQUIRE(file);
 
     std::string content;
