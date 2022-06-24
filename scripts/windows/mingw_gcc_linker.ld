@@ -44,12 +44,6 @@ SECTIONS
   }
   .rdata BLOCK(__section_alignment__) :
   {
-    *(.rdata)
-             *(SORT(.rdata$*))
-    . = ALIGN(4);
-    __rt_psrelocs_start = .;
-    KEEP(*(.rdata_runtime_pseudo_reloc))
-    __rt_psrelocs_end = .;
     ___CTOR_LIST__ = .;
     __CTOR_LIST__ = .;
     LONG (-1); LONG (-1);
@@ -66,6 +60,12 @@ SECTIONS
     KEEP (*(.dtor));
     KEEP (*(SORT_BY_NAME(.dtors.*)));
     LONG (0); LONG (0);
+    *(.rdata)
+    *(SORT(.rdata$*))
+    . = ALIGN(4);
+    __rt_psrelocs_start = .;
+    KEEP(*(.rdata_runtime_pseudo_reloc))
+    __rt_psrelocs_end = .;
   }
   __rt_psrelocs_size = __rt_psrelocs_end - __rt_psrelocs_start;
   ___RUNTIME_PSEUDO_RELOC_LIST_END__ = .;
