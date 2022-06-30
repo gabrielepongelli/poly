@@ -83,17 +83,15 @@ namespace poly {
              */
             std::uint8_t code_max_permissions(std::uint8_t perms) noexcept;
 
-            inline void save_changes(const fs::path &path) noexcept {
-                CommonBinaryEditor<
-                    CustomBinaryEditor<HostOS::kMacOS>>::save_changes(path);
-            }
+            bool save_changes(const fs::path &path) noexcept;
 
-            inline void save_changes(std::vector<std::uint8_t> &raw) noexcept {
+            inline bool save_changes(std::vector<std::uint8_t> &raw) noexcept {
                 raw = std::move(this->bin_->raw());
+                return false;
             }
 
-            inline void save_changes(std::ostream &dst) noexcept {
-                CommonBinaryEditor<
+            inline bool save_changes(std::ostream &dst) noexcept {
+                return CommonBinaryEditor<
                     CustomBinaryEditor<HostOS::kMacOS>>::save_changes(dst);
             }
 

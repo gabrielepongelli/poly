@@ -205,25 +205,40 @@ namespace poly {
          * @param path optional path where to save the modified binary. If
          * is an empty path, the path will be the same of the binary
          * parsed by this binary editor. Default is empty.
+         * @return true if this method has written additional data (which were
+         * already present in the original binary) after the binary which are
+         * not part of the executable format, otherwise if those data hasn't
+         * been written (or if those data are not present in the original
+         * binary) returns false.
          */
-        inline void save_changes(const fs::path &path = {}) noexcept {
-            this->real()->save_changes(path);
+        inline bool save_changes(const fs::path &path = {}) noexcept {
+            return this->real()->save_changes(path);
         }
 
         /**
          * Reconstruct the binary.
          * @param raw [out] raw bytes that will make up the final binary.
+         * @return true if this method has written additional data (which were
+         * already present in the original binary) after the binary which are
+         * not part of the executable format, otherwise if those data hasn't
+         * been written (or if those data are not present in the original
+         * binary) returns false.
          */
-        inline void save_changes(std::vector<std::uint8_t> &raw) noexcept {
-            this->real()->save_changes(raw);
+        inline bool save_changes(std::vector<std::uint8_t> &raw) noexcept {
+            return this->real()->save_changes(raw);
         }
 
         /**
          * Reconstruct the binary.
          * @param dst output stream where to write the final binary.
+         * @return true if this method has written additional data (which were
+         * already present in the original binary) after the binary which are
+         * not part of the executable format, otherwise if those data hasn't
+         * been written (or if those data are not present in the original
+         * binary) returns false.
          */
-        inline void save_changes(std::ostream &dst) noexcept {
-            this->real()->save_changes(dst);
+        inline bool save_changes(std::ostream &dst) noexcept {
+            return this->real()->save_changes(dst);
         }
     };
 
@@ -285,9 +300,7 @@ namespace poly {
 
             RawCode get_section_content(const std::string &name) const noexcept;
 
-            void save_changes(const fs::path &path) noexcept;
-
-            void save_changes(std::ostream &dst) noexcept;
+            bool save_changes(std::ostream &dst) noexcept;
 
           protected:
             /**

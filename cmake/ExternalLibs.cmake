@@ -25,7 +25,7 @@ set(ASMJIT_STATIC ON CACHE INTERNAL "Build the library statically")
 # -------------------------------------------
 set(LIEF LIEF)
 set(LIEF_URL "https://github.com/lief-project/LIEF.git")
-set(LIEF_VERSION c52a39850cccd3f307317946af614bab2a972e7d)
+set(LIEF_VERSION 9cf3b56cf004407c56695a61688ecc8ac511ef0e)
 
 
 FetchContent_Declare(${LIEF}

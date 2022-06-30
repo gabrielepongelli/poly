@@ -157,7 +157,7 @@ namespace poly {
             }
         }
 
-        void CustomBinaryEditor<HostOS::kWindows>::save_changes(
+        bool CustomBinaryEditor<HostOS::kWindows>::save_changes(
             const fs::path &path) noexcept {
             LIEF::PE::Builder builder(*bin_);
             builder.build();
@@ -167,6 +167,8 @@ namespace poly {
             } else {
                 builder.write(path.string());
             }
+
+            return true;
         }
 
         CustomBinaryEditor<HostOS::kWindows>::CustomBinaryEditor(

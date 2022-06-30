@@ -144,22 +144,12 @@ namespace poly {
         }
 
         template <class Real>
-        void
-        CommonBinaryEditor<Real>::save_changes(const fs::path &path) noexcept {
-            if (path.empty()) {
-                ProtectedAccessor::get_bin(*this->real())
-                    .write(ProtectedAccessor::get_bin(*this->real()).name());
-            } else {
-                ProtectedAccessor::get_bin(*this->real()).write(path.string());
-            }
-        }
-
-        template <class Real>
-        void
+        bool
         CommonBinaryEditor<Real>::save_changes(std::ostream &dst) noexcept {
             std::vector<std::uint8_t> raw;
-            this->real()->save_changes(raw);
+            auto res = this->real()->save_changes(raw);
             dst.write(reinterpret_cast<char *>(raw.data()), raw.size());
+            return res;
         }
 
         template <class Real>

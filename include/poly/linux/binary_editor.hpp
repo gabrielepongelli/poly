@@ -61,25 +61,15 @@ namespace poly {
             Error update_content(const std::string &name,
                                  const RawCode &content) noexcept;
 
-            inline void save_changes(const fs::path &path) noexcept {
-                if (this->bin_->has_overlay()) {
-                    this->bin_->overlay({});
-                }
+            bool save_changes(const fs::path &path) noexcept;
 
-                CommonBinaryEditor<
-                    CustomBinaryEditor<HostOS::kLinux>>::save_changes(path);
-            }
-
-            inline void save_changes(std::vector<std::uint8_t> &raw) noexcept {
-                if (this->bin_->has_overlay()) {
-                    this->bin_->overlay({});
-                }
-
+            inline bool save_changes(std::vector<std::uint8_t> &raw) noexcept {
                 raw = std::move(this->bin_->raw());
+                return true;
             }
 
-            inline void save_changes(std::ostream &dst) noexcept {
-                CommonBinaryEditor<
+            inline bool save_changes(std::ostream &dst) noexcept {
+                return CommonBinaryEditor<
                     CustomBinaryEditor<HostOS::kLinux>>::save_changes(dst);
             }
 

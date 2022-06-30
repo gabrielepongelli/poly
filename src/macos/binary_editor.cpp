@@ -204,6 +204,17 @@ namespace poly {
             return old;
         }
 
+        bool CustomBinaryEditor<HostOS::kMacOS>::save_changes(
+            const fs::path &path) noexcept {
+            if (path.empty()) {
+                this->bin_->write(this->bin_->name());
+            } else {
+                this->bin_->write(path.string());
+            }
+
+            return false;
+        }
+
         CustomBinaryEditor<HostOS::kMacOS>::CustomBinaryEditor(
             std::unique_ptr<LIEF::MachO::Binary> &&bin,
             LIEF::MachO::Section &text_section) noexcept

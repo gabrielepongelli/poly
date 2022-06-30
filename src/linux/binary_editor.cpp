@@ -80,10 +80,6 @@ namespace poly {
             }
 
             LIEF::ELF::Section *section = this->get_section_impl(name);
-            LIEF::ELF::Segment *segment =
-                this->bin_->segment_from_virtual_address(
-                    section->virtual_address());
-
             int size_offset = content.size() - section->size();
 
             if (size_offset > 0) {
@@ -95,6 +91,17 @@ namespace poly {
             section->content({content.begin(), content.end()});
 
             return Error::kNone;
+        }
+
+        bool CustomBinaryEditor<HostOS::kLinux>::save_changes(
+            const fs::path &path) noexcept {
+            if (path.empty()) {
+                this->bin_->write(this->bin_->name());
+            } else {
+                this->bin_->write(path.string());
+            }
+
+            return true;
         }
 
         CustomBinaryEditor<HostOS::kLinux>::CustomBinaryEditor(

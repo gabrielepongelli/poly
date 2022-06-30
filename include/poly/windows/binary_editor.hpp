@@ -79,16 +79,17 @@ namespace poly {
             Error update_content(const std::string &name,
                                  const RawCode &content) noexcept;
 
-            void save_changes(const fs::path &path) noexcept;
+            bool save_changes(const fs::path &path) noexcept;
 
-            inline void save_changes(std::vector<std::uint8_t> &raw) noexcept {
+            inline bool save_changes(std::vector<std::uint8_t> &raw) noexcept {
                 LIEF::PE::Builder builder(*bin_);
                 builder.build();
                 raw = std::move(builder.get_build());
+                return true;
             }
 
-            inline void save_changes(std::ostream &dst) noexcept {
-                CommonBinaryEditor<
+            inline bool save_changes(std::ostream &dst) noexcept {
+                return CommonBinaryEditor<
                     CustomBinaryEditor<HostOS::kWindows>>::save_changes(dst);
             }
 

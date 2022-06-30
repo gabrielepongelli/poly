@@ -270,11 +270,12 @@ namespace poly {
             out.write(reinterpret_cast<char *>(target_content.data()),
                       target_size);
         } else {
-            this->editor_->save_changes(out);
-
-            if (!this->is_first_execution()) {
-                out.seekg(this->total_size_ - sizeof(std::uint64_t) -
-                          sizeof(Address) - this->attached_file_size_);
+            if (this->editor_->save_changes(out) &&
+                !this->is_first_execution()) {
+                auto offset = static_cast<std::size_t>(out.tellg()) -
+                              sizeof(std::uint64_t) - sizeof(Address) -
+                              this->attached_file_size_;
+                out.seekg(offset);
             }
 
             out.write(reinterpret_cast<char *>(target_content.data()),
