@@ -129,12 +129,18 @@ namespace poly {
             // bind the Loop label here
             c.bind(Loop);
             c.mov(working_register, asmjit::x86::ptr(data_ptr));
+            c.xor_(working_register, working_register);
+            c.add(working_register, asmjit::x86::ptr(data_ptr));
 
             // encryption algorithm
             Enc::template assemble_decryption<size>(key, working_register, c);
 
             c.xor_(working_register, iv);
-            c.mov(iv, asmjit::x86::ptr(data_ptr));
+
+            // c.mov(iv, asmjit::x86::ptr(data_ptr));
+            c.xor_(iv, iv);
+            c.add(iv, asmjit::x86::ptr(data_ptr));
+
             c.mov(asmjit::x86::ptr(data_ptr), working_register);
             c.add(data_ptr, size);
             c.sub(counter, size);

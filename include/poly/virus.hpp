@@ -8,6 +8,7 @@
 #include "encryption.hpp"
 #include "engine.hpp"
 #include "filesystem.hpp"
+#include "ocompiler.hpp"
 #include "utils.hpp"
 
 namespace poly {
@@ -72,10 +73,10 @@ namespace poly {
      * Default class is poly::OsBinaryEditor.
      * - the Compiler class template parameter is used for the generation of the
      * assembly code and its serialization. See PolymorphicEngine for its
-     * requirements. Default class is poly::Compiler.
+     * requirements. Default class is poly::OCompiler.
      */
     template <class TargetSelectPolicy, class ExecPolicy, class Cipher,
-              class Editor = OsBinaryEditor, class Compiler = poly::Compiler>
+              class Editor = OsBinaryEditor, class Compiler = poly::OCompiler>
     class Virus : private TargetSelectPolicy, private ExecPolicy {
       public:
         /**

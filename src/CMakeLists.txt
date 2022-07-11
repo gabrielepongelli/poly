@@ -7,6 +7,7 @@ set(HEADER_LIST
     encryption.hpp
     virus.hpp
     filesystem.hpp
+    ocompiler.hpp
 )
 
 set(SOURCE_LIST
@@ -16,6 +17,7 @@ set(SOURCE_LIST
     utils.tpp
     encryption.tpp
     virus.tpp
+    ocompiler.cpp
 )
 
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")

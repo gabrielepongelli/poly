@@ -25,9 +25,10 @@ namespace poly {
         void PolymorphicEngine<Cipher, Compiler, Editor, HostOS::kWindows>::
             generate_syscall_impl(Address code_va, std::size_t len,
                                   asmjit::Label &exit_label) {
-
-            auto start_address = this->compiler_->zcx();
-            auto old_page_ptr = this->compiler_->newIntPtr();
+            auto first_arg = this->compiler_->newUInt64();
+            auto second_arg = this->compiler_->newUInt64();
+            auto third_arg = this->compiler_->newUInt64();
+            auto fourth_arg = this->compiler_->newIntPtr();
             auto old_page_perms =
                 this->compiler_->newStack(kByteWordSize, kByteWordSize);
             auto fixed_len = len;
@@ -48,8 +49,15 @@ namespace poly {
                                                         "VirtualProtect"));
             virtualprotect_va.setRel();
 
-            this->compiler_->lea(start_address, mem_va);
-            this->compiler_->lea(old_page_ptr, old_page_perms);
+            this->compiler_->lea(first_arg, mem_va);
+
+            this->compiler_->xor_(second_arg, second_arg);
+            this->compiler_->add(second_arg, fixed_len);
+
+            this->compiler_->xor_(third_arg, third_arg);
+            this->compiler_->add(third_arg, PAGE_EXECUTE_READWRITE);
+
+            this->compiler_->lea(fourth_arg, old_page_perms);
 
             // the signature is: BOOL VirtualProtect(LPVOID lpAddress,
             // SIZE_T dwSize, DWORD  flNewProtect, PDWORD lpflOldProtect)
@@ -58,9 +66,10 @@ namespace poly {
                 &invoke, virtualprotect_va,
                 asmjit::FuncSignatureT<BOOL, LPVOID, SIZE_T, DWORD, PDWORD>());
 
-            invoke->setArg(1, fixed_len);
-            invoke->setArg(2, PAGE_EXECUTE_READWRITE);
-            invoke->setArg(3, old_page_ptr);
+            invoke->setArg(0, first_arg);
+            invoke->setArg(1, second_arg);
+            invoke->setArg(2, third_arg);
+            invoke->setArg(3, fourth_arg);
 
             auto virtualprotect_result = this->compiler_->zax();
 

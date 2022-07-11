@@ -69,4 +69,26 @@ namespace poly {
 
     } // namespace impl
 
+    enum class MutationType {
+        kNotSimple,
+        kAndSimple,
+        kOrSimple,
+        kXorSimple,
+        kSumSimple,
+        kSubtractSimple,
+        kMultiplySimple,
+
+        // a | b = (a ^ b) + (a & b)
+        kOrRecursive,
+
+        // a ^ b = (a + b) - 2*(a & b)
+        kXorRecursive,
+
+        // a + b = (a ^ b) + 2*(a & b)
+        kSumRecursive,
+
+        // a - b = (a ^ b) - 2 * (!a & b)
+        kSubtractRecursive
+    };
+
 } // namespace poly

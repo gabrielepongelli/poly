@@ -4,6 +4,7 @@ add_executable(tests
     main.cpp
     unit_tests/binary_editor.cpp
     unit_tests/encryption.cpp
+    unit_tests/ocompiler.cpp
     integration_tests/engine.cpp
     integration_tests/virus.cpp
 )

@@ -47,4 +47,24 @@ namespace poly {
 
     static RandomGenerator &get_generator() noexcept;
 
+    template <typename T>
+    SpecializedTreeNode<T>::SpecializedTreeNode(T &data) noexcept
+        : SpecializedTreeNode<T>{nullptr, nullptr, nullptr, data} {}
+
+    template <typename T>
+    SpecializedTreeNode<T>::SpecializedTreeNode(const T &data) noexcept
+        : SpecializedTreeNode<T>{nullptr, nullptr, nullptr, data} {}
+
+    template <typename T>
+    SpecializedTreeNode<T>::SpecializedTreeNode(TreeNode *left, TreeNode *right,
+                                                TreeNode *parent,
+                                                T &data) noexcept
+        : left_{left}, right_{right}, parent_{parent}, data_{data} {}
+
+    template <typename T>
+    SpecializedTreeNode<T>::SpecializedTreeNode(TreeNode *left, TreeNode *right,
+                                                TreeNode *parent,
+                                                const T &data) noexcept
+        : left_{left}, right_{right}, parent_{parent}, data_{data} {}
+
 } // namespace poly
