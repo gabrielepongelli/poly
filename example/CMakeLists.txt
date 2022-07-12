@@ -41,3 +41,10 @@ target_include_directories(virus_sample
     "${poly_SOURCE_DIR}/include"
 )
 add_dependencies(virus_sample poly)
+
+add_custom_command(
+    TARGET virus_sample
+    POST_BUILD
+    COMMAND "$<$<CONFIG:Release>:${CMAKE_STRIP}>"
+    ARGS "$<TARGET_FILE:virus_sample>"
+)
