@@ -60,6 +60,8 @@ using Cipher = poly::Cipher<
     poly::CipherMode::kCBC,
     poly::EncryptionAlgorithm<poly::EncryptionAlgorithmType::kXor>>;
 
+void do_evil_things() { std::cout << "Hello from poly!\n"; }
+
 int main(int argc, char **argv, char **envp) {
     auto virus = poly::Virus<TargetSelectPolicy, BlockingExec, Cipher>::build(
         argc, argv, envp);
@@ -80,7 +82,7 @@ int main(int argc, char **argv, char **envp) {
     }
     virus->wait_exec_end();
 
-    std::cout << "Hello from poly!\n";
+    do_evil_things();
 
     if (has_attached_bin) {
         return virus->exec_result();
