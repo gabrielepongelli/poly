@@ -4,7 +4,8 @@ project(Poly
         LANGUAGES CXX ASM ASM_MASM)
 
 
-option(BUILD_TESTING "Build test cases" ON)
+option(POLY_BUILD_TESTING "Build test cases" OFF)
+option(POLY_BUILD_EXAMPLE "Build example" OFF)
 
 
 # Only do these if this is the main project, and not if it is included through add_subdirectory
@@ -13,13 +14,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(CMAKE_CXX_STANDARD 14)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)
-    
-    # In order not to make the linker complain about lower visibility settings 
-    # in the external libraries
-    set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-
-    # Support folders in IDEs
-    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
     # Testing only available if this is the main app
     include(CTest)
@@ -31,9 +25,12 @@ endif()
 include("cmake/ExternalLibs.cmake")
 
 # Static library that contains common classes
-add_subdirectory(src)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src")
 
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING) AND POLY_BUILD_TESTING)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tests")
+endif()
 
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING) AND BUILD_TESTING)
-    add_subdirectory(tests)
+if(POLY_BUILD_EXAMPLE)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/example")
 endif()

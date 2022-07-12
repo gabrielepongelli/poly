@@ -60,6 +60,8 @@ namespace poly {
      * - the TargetSelectPolicy class template parameter defines how the next
      * binary to infect must be chosen. It must provide the following method:
      *      poly::fs::path next_target(poly::fs::path) noexcept
+     * where the path of the program being executed is passed by argument. Its
+     * result path is assumed to be a valid path which point to a file.
      * - the ExecPolicy class template parameter defines how an infected binary
      * must be executed. It must provide the following methods:
      *       void exec(const poly::fs::path &, int, char **const,

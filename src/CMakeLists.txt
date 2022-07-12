@@ -6,6 +6,7 @@ set(HEADER_LIST
     binary_editor.hpp
     encryption.hpp
     virus.hpp
+    poly.hpp
     filesystem.hpp
     ocompiler.hpp
 )
@@ -66,8 +67,20 @@ endif()
 
 # Append the include dir to all include files
 list(TRANSFORM HEADER_LIST PREPEND "${Poly_SOURCE_DIR}/include/poly/")
+list(TRANSFORM SOURCE_LIST PREPEND "${Poly_SOURCE_DIR}/src/")
 
 add_library(poly STATIC ${HEADER_LIST} ${SOURCE_LIST})
+set_target_properties(poly
+    PROPERTIES POSITION_INDEPENDENT_CODE ON
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED ON
+    CXX_VISIBILITY_PRESET hidden
+)
+
+target_compile_options(poly
+    INTERFACE
+    "-fvisibility=hidden"
+)
 
 # Required by AsmJIT to link itself statically in the correct way
 target_compile_definitions(poly PUBLIC ASMJIT_STATIC)
@@ -82,8 +95,8 @@ endif()
 
 target_include_directories(poly
     PUBLIC
-    "${CMAKE_SOURCE_DIR}/include"
-    "${CMAKE_SOURCE_DIR}/src"
+    "${Poly_SOURCE_DIR}/include"
+    "${Poly_SOURCE_DIR}/src"
 )
 
 target_link_libraries(poly
