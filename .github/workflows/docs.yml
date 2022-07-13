@@ -23,7 +23,7 @@ jobs:
             -S . \
             -B ./build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DPOLY_BUILD_DOC
+            -DPOLY_BUILD_DOC=ON
       - name: Build docs
         shell: bash
         run: |
