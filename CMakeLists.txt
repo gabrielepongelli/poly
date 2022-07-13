@@ -39,6 +39,6 @@ if(POLY_BUILD_EXAMPLE)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/example")
 endif()
 
-if(POLY_DOC)
+if(POLY_BUILD_DOC)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/docs")
 endif()
