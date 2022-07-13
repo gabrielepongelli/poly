@@ -28,8 +28,8 @@ jobs:
         shell: bash
         run: |
           cmake \
-            --build ./build 
-            --config Release 
+            --build ./build \
+            --config Release \
             --target docs
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@releases/v3
