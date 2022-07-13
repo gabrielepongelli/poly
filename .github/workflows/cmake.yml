@@ -2,8 +2,9 @@ name: CMake
 
 on:
   push:
+    branches: [master]
   pull_request:
-  release:
+    branches: [master]
 
 jobs:
   build:

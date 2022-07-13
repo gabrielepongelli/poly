@@ -23,6 +23,7 @@ namespace poly {
     constexpr HostOS kOS = HostOS::HOST_OS;
 
     namespace impl {
+
         template <class T, T _Val>
         struct is_supported : std::false_type {};
 

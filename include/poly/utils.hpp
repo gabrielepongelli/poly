@@ -98,143 +98,143 @@ namespace poly {
         std::minstd_rand generator_;
     };
 
-    /**
-     * Interface which represent a generic node of a binary tree.
-     */
+    //!
+    //! Interface which represent a generic node of a binary tree.
+    //!
     class TreeNode {
       public:
-        /**
-         * @return the left child of this node.
-         */
+        //!
+        //! \return the left child of this node.
+        //!
         virtual TreeNode *left() const noexcept = 0;
 
-        /**
-         * Modify the left child of this node.
-         * @param new_left the new node which will replace the old one.
-         * @return the old left child.
-         */
+        //!
+        //! Modify the left child of this node.
+        //! \param new_left the new node which will replace the old one.
+        //! \return the old left child.
+        //!
         virtual TreeNode *left(TreeNode *new_left) noexcept = 0;
 
-        /**
-         * @return the right child of this node.
-         */
+        //!
+        //! \return the right child of this node.
+        //!
         virtual TreeNode *right() const noexcept = 0;
 
-        /**
-         * Modify the right child of this node.
-         * @param new_left the new node which will replace the old one.
-         * @return the old right child.
-         */
+        //!
+        //! Modify the right child of this node.
+        //! \param new_right the new node which will replace the old one.
+        //! \return the old right child.
+        //!
         virtual TreeNode *right(TreeNode *new_right) noexcept = 0;
 
-        /**
-         * @return the parent of this node.
-         */
+        //!
+        //! \return the parent of this node.
+        //!
         virtual TreeNode *parent() const noexcept = 0;
 
-        /**
-         * Modify the parent of this node.
-         * @param new_left the new node which will replace the old one.
-         * @return the old parent.
-         */
-        virtual TreeNode *parent(TreeNode *) noexcept = 0;
+        //!
+        //! Modify the parent of this node.
+        //! \param new_parent the new node which will replace the old one.
+        //! \return the old parent.
+        //!
+        virtual TreeNode *parent(TreeNode *new_parent) noexcept = 0;
 
         virtual ~TreeNode() {}
 
-        /**
-         * @return true if this node has neither a left child nor a right child,
-         * otherwise returns false.
-         */
+        //!
+        //! \return true if this node has neither a left child nor a right
+        //! child, otherwise returns false.
+        //!
         virtual inline bool is_leaf() const noexcept {
             return left() == right() && left() == nullptr;
         }
 
-        /**
-         * Cast this node to one of its derived classes.
-         */
+        //!
+        //! Cast this node to one of its derived classes.
+        //!
         template <typename T>
         inline T *as() noexcept {
             return static_cast<T *>(this);
         }
 
-        /**
-         * Cast this node to one of its derived classes.
-         */
+        //!
+        //! Cast this node to one of its derived classes.
+        //!
         template <typename T>
         inline T *as() const noexcept {
             return static_cast<T *>(this);
         }
 
-        /**
-         * Copy the tree which has this node as root.
-         * @return the new copy.
-         */
+        //!
+        //! Copy the tree which has this node as root.
+        //! \return the new copy.
+        //!
         virtual TreeNode *copy_tree() const noexcept;
 
-        /**
-         * Visit a tree in post-order and perform actions on each node.
-         * @param root root of the tree to visit.
-         * @param fn function to call on each node. The node will be passed by
-         * parameter to the function.
-         */
+        //!
+        //! Visit a tree in post-order and perform actions on each node.
+        //! \param root root of the tree to visit.
+        //! \param fn function to call on each node. The node will be passed by
+        //! parameter to the function.
+        //!
         static void post_order(TreeNode *root,
                                std::function<void(TreeNode &node)> fn);
 
       protected:
-        /**
-         * Copy only this node, without copying the entire tree.
-         * @return the newly created copy.
-         */
+        //!
+        //! Copy only this node, without copying the entire tree.
+        //! \return the newly created copy.
+        //!
         virtual TreeNode *copy_node() const noexcept = 0;
 
       private:
-        /**
-         * Helper method for the post-order visit. Retrieve the successor of the
-         * specified node in the visit.
-         * @param node node of which we must find the successor.
-         * @return nullptr if the node passed is the last node of the visit,
-         * otherwise returns a valid pointer to the successor.
-         */
+        //!
+        //! Helper method for the post-order visit. Retrieve the successor of
+        //! the specified node in the visit.
+        //! \param node node of which we must find the successor.
+        //! \return nullptr if the node passed is the last node of the visit,
+        //! otherwise returns a valid pointer to the successor.
+        //!
         static TreeNode *post_order_successor(TreeNode *node) noexcept;
     };
 
-    /**
-     * Concrete implementation of a TreeNode which will contain data of type T.
-     */
+    //!
+    //! Concrete implementation of a TreeNode which will contain data of type T.
+    //!
     template <typename T>
     class SpecializedTreeNode : public TreeNode {
       public:
-        /**
-         * Build a new SpecializedTreeNode with no parent, left child and right
-         * child.
-         * @param data data to save inside the new node.
-         */
+        //!
+        //! Build a new SpecializedTreeNode with no parent, left child and right
+        //! child.
+        //! \param data data to save inside the new node.
+        //!
         SpecializedTreeNode<T>(T &data) noexcept;
 
-        /**
-         * Build a new SpecializedTreeNode with no parent, left child and right
-         * child.
-         * @param data data to save inside the new node.
-         */
+        //!
+        //! Build a new SpecializedTreeNode with no parent, left child and right
+        //! child.
+        //! \param data data to save inside the new node.
+        //!
         SpecializedTreeNode<T>(const T &data) noexcept;
 
-        /**
-         * Build a new SpecializedTreeNode.
-         * @param left left child of the new node.
-         * @param right right child of the new node.
-         * @param parent parent of the new node.
-         * @param data data to save inside the new node.
-         */
+        //!
+        //! Build a new SpecializedTreeNode.
+        //! \param left left child of the new node.
+        //! \param right right child of the new node.
+        //! \param parent parent of the new node.
+        //! \param data data to save inside the new node.
+        //!
         SpecializedTreeNode<T>(TreeNode *left, TreeNode *right,
                                TreeNode *parent, T &data) noexcept;
 
-        /**
-         * Build a new SpecializedTreeNode.
-         * @param left left child of the new node.
-         * @param right right child of the new node.
-         * @param parent parent of the new node.
-         * @param data data to save inside the new node.
-         */
+        //!
+        //! Build a new SpecializedTreeNode.
+        //! \param left left child of the new node.
+        //! \param right right child of the new node.
+        //! \param parent parent of the new node.
+        //! \param data data to save inside the new node.
+        //!
         SpecializedTreeNode<T>(TreeNode *left, TreeNode *right,
                                TreeNode *parent, const T &data) noexcept;
 
@@ -267,17 +267,17 @@ namespace poly {
             return res;
         }
 
-        /**
-         * @return the data contained in this node.
-         */
+        //!
+        //! \return the data contained in this node.
+        //!
         inline T &data() noexcept { return data_; }
 
-        /**
-         * Allocate a new SpecializedTreeNode with no parent, left child and
-         * right child.
-         * @param data data to save inside the new node.
-         * @return the newly created node.
-         */
+        //!
+        //! Allocate a new SpecializedTreeNode with no parent, left child and
+        //! right child.
+        //! \param data data to save inside the new node.
+        //! \return the newly created node.
+        //!
         static inline SpecializedTreeNode<T> *build(const T &data) noexcept {
             return new SpecializedTreeNode<T>(data);
         }

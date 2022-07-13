@@ -4,8 +4,9 @@ project(Poly
         LANGUAGES CXX ASM ASM_MASM)
 
 
-option(POLY_BUILD_TESTING "Build test cases" OFF)
-option(POLY_BUILD_EXAMPLE "Build example" OFF)
+option(POLY_BUILD_TESTING "Build test cases"    OFF)
+option(POLY_BUILD_EXAMPLE "Build example"       OFF)
+option(POLY_BUILD_DOC     "Build documentation" OFF)
 
 
 # Only do these if this is the main project, and not if it is included through add_subdirectory
@@ -24,6 +25,9 @@ endif()
 # Fetch the external libraries
 include("cmake/ExternalLibs.cmake")
 
+set(SOURCE_DIR "${Poly_SOURCE_DIR}/src/")
+set(INCLUDE_DIR "${Poly_SOURCE_DIR}/include/poly/")
+
 # Static library that contains common classes
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src")
 
@@ -33,4 +37,8 @@ endif()
 
 if(POLY_BUILD_EXAMPLE)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/example")
+endif()
+
+if(POLY_DOC)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/docs")
 endif()

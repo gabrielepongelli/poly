@@ -14,64 +14,62 @@
 
 namespace poly {
 
+    template <std::size_t bytes, std::size_t check, typename T>
+    Block<bytes>
+    BlockBuilder<bytes, check, T>::build(std::uint8_t *ptr) noexcept {
+        Block<bytes> res = 0;
+
+        for (std::size_t i = 0; i < bytes; i++) {
+            res |= std::bitset<bytes>(ptr[i]) << (8 * i);
+        }
+
+        return res;
+    }
+
+    template <std::size_t bytes, std::size_t check, typename T>
+    void BlockBuilder<bytes, check, T>::to_bytes(Block<bytes> &b,
+                                                 std::uint8_t *ptr) noexcept {
+        for (std::size_t i = 0; i < bytes; i++) {
+            ptr[i] = (std::uint8_t)((b >> (i * 8)).to_ulong());
+        }
+    }
+
+    template <std::size_t bytes, std::size_t check>
+    Block<bytes>
+    BlockBuilder<bytes, check,
+                 impl::range<(bytes == 2 || bytes == 4 || bytes == 8)>>::
+        build(std::uint8_t *ptr) noexcept {
+        Block<bytes> res = 0;
+
+        for (std::size_t i = 0; i < bytes; i++) {
+            res |= static_cast<Block<bytes>>(ptr[i]) << (8 * i);
+        }
+
+        return res;
+    }
+
+    template <std::size_t bytes, std::size_t check>
+    void BlockBuilder<bytes, check,
+                      impl::range<(bytes == 2 || bytes == 4 || bytes == 8)>>::
+        to_bytes(Block<bytes> &b, std::uint8_t *ptr) noexcept {
+        for (std::size_t i = 0; i < bytes; i++) {
+            ptr[i] = (std::uint8_t)(b >> (i * 8));
+        }
+    }
+
+    template <std::size_t check>
+    inline Block<1>
+    BlockBuilder<1, check, impl::range<>>::build(std::uint8_t *ptr) noexcept {
+        return *ptr;
+    }
+
+    template <std::size_t check>
+    inline void BlockBuilder<1, check, impl::range<>>::to_bytes(
+        Block<1> &b, std::uint8_t *ptr) noexcept {
+        *ptr = b;
+    }
+
     namespace impl {
-
-        template <std::size_t bytes, std::size_t check, typename T>
-        Block<bytes>
-        BlockBuilder<bytes, check, T>::build(std::uint8_t *ptr) noexcept {
-            Block<bytes> res = 0;
-
-            for (std::size_t i = 0; i < bytes; i++) {
-                res |= std::bitset<bytes>(ptr[i]) << (8 * i);
-            }
-
-            return res;
-        }
-
-        template <std::size_t bytes, std::size_t check, typename T>
-        void
-        BlockBuilder<bytes, check, T>::to_bytes(Block<bytes> &b,
-                                                std::uint8_t *ptr) noexcept {
-            for (std::size_t i = 0; i < bytes; i++) {
-                ptr[i] = (std::uint8_t)((b >> (i * 8)).to_ulong());
-            }
-        }
-
-        template <std::size_t bytes, std::size_t check>
-        Block<bytes>
-        BlockBuilder<bytes, check,
-                     impl::range<(bytes == 2 || bytes == 4 || bytes == 8)>>::
-            build(std::uint8_t *ptr) noexcept {
-            Block<bytes> res = 0;
-
-            for (std::size_t i = 0; i < bytes; i++) {
-                res |= static_cast<Block<bytes>>(ptr[i]) << (8 * i);
-            }
-
-            return res;
-        }
-
-        template <std::size_t bytes, std::size_t check>
-        void
-        BlockBuilder<bytes, check,
-                     impl::range<(bytes == 2 || bytes == 4 || bytes == 8)>>::
-            to_bytes(Block<bytes> &b, std::uint8_t *ptr) noexcept {
-            for (std::size_t i = 0; i < bytes; i++) {
-                ptr[i] = (std::uint8_t)(b >> (i * 8));
-            }
-        }
-
-        template <std::size_t check>
-        inline Block<1> BlockBuilder<1, check, impl::range<>>::build(
-            std::uint8_t *ptr) noexcept {
-            return *ptr;
-        }
-
-        template <std::size_t check>
-        inline void BlockBuilder<1, check, impl::range<>>::to_bytes(
-            Block<1> &b, std::uint8_t *ptr) noexcept {
-            *ptr = b;
-        }
 
         template <class Enc>
         template <std::uint8_t size>
