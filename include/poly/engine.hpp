@@ -51,7 +51,7 @@ namespace poly {
     //! \see poly::OsPolymorphicEngine<Cipher, Compiler, Editor>
     //!
     template <class Real, class Cipher, class Compiler, class Editor>
-    class PolymorphicEngineBase : public Crtp<Real> {
+    class PolymorphicEngineBase : public impl::Crtp<Real> {
       public:
         PolymorphicEngineBase(BinaryEditor<Editor> &editor,
                               std::unique_ptr<Compiler> compiler) noexcept;
