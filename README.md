@@ -47,7 +47,6 @@ This project uses CMake as build system.
 The configuration file makes available this options which are turned off by default:
 ```cmake
 option(POLY_BUILD_TESTING "Build test cases"    OFF)
-option(POLY_BUILD_EXAMPLE "Build example"       OFF)
 option(POLY_BUILD_DOC     "Build documentation" OFF)
 ```
 

@@ -4,6 +4,8 @@ project(Poly_Sample LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
+
 ########################################
 ############ Poly Inclusion ############
 ########################################
@@ -17,10 +19,13 @@ set(POLY_TAG "main")
 FetchContent_Declare(POLY
     GIT_REPOSITORY "${POLY_URL}"
     GIT_TAG "${POLY_TAG}"
+    # You may specify an existing Poly source directory if you don't want to
+    # download. Just comment out the above "GIT_*"" commands and uncoment the
+    # following "SOURCE_DIR" line
+    # SOURCE_DIR       "${CMAKE_CURRENT_LIST_DIR}/../../.."
 )
 
 set(POLY_BUILD_TESTS OFF CACHE INTERNAL "")
-set(POLY_BUILD_EXAMPLE OFF CACHE INTERNAL "")
 set(POLY_BUILD_DOC OFF CACHE INTERNAL "")
 
 FetchContent_MakeAvailable(POLY)
@@ -43,6 +48,7 @@ target_include_directories(virus_sample
 )
 add_dependencies(virus_sample poly)
 
+# In order to remove binary' symbols
 add_custom_command(
     TARGET virus_sample
     POST_BUILD

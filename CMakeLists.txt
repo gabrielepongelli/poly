@@ -5,7 +5,6 @@ project(Poly
 
 
 option(POLY_BUILD_TESTING "Build test cases"    OFF)
-option(POLY_BUILD_EXAMPLE "Build example"       OFF)
 option(POLY_BUILD_DOC     "Build documentation" OFF)
 
 
@@ -33,10 +32,6 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING) AND POLY_BUILD_TESTING)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tests")
-endif()
-
-if(POLY_BUILD_EXAMPLE)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/example")
 endif()
 
 if(POLY_BUILD_DOC)
