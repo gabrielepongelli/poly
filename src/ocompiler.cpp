@@ -271,7 +271,7 @@ namespace poly {
                       asmjit::Imm(operands[1].imm.value() / 2));
                 return operands[0];
             } else if (operands[0].op.isMem()) {
-                c.sub(operands[0].mem,
+                c.sal(operands[0].mem,
                       asmjit::Imm(operands[1].imm.value() / 2));
                 return operands[0];
             }
