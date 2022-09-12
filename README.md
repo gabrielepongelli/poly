@@ -74,4 +74,4 @@ An example of usage of this library can be found [here](https://github.com/gabri
 
 ## Documentation
 
-A detailed documentation of the project' structure can be found [here](https://gabrielepongelli.github.io/poly/).
+A detailed documentation of the project' structure can be found [here](https://gabrielepongelli.dev/docs/poly).
