@@ -3,8 +3,6 @@ name: Docs
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
   build:
@@ -15,7 +13,7 @@ jobs:
         shell: bash
         run: brew install cmake doxygen
       - name: Checkout repo
-        uses: actions/checkout@1.0.0
+        uses: actions/checkout@v3
       - name: Configure Cmake
         shell: bash
         run: |
@@ -32,8 +30,10 @@ jobs:
             --config Release \
             --target docs
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@releases/v3
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: ./build/docs/html
+          token: ${{ secrets.DEPLOY_TO_PAGES }}
+          branch: main
+          folder: ./build/docs/html
+          repository-name: gabrielepongelli/gabrielepongelli.github.io
+          target-folder: ./docs/poly
